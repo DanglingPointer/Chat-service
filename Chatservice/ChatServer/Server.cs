@@ -169,7 +169,12 @@ namespace Chat.Server
                     case "names":
                         if (!IsNameValid(user))
                             throw new ProtocolViolationException();
-                        response = new Response("info", "Request types:\nlogin\nlogout\nmsg\nnames\nhelp");
+                        string names = "";
+                        foreach (string name in m_clients.Keys)
+                        {
+                            names += (name + " ");
+                        }
+                        response = new Response("info", names);
                         m_clients[user].SendResponse((Response)response);
                         break;
                     default:
@@ -229,7 +234,7 @@ namespace Chat.Server
         TcpListener     m_listener;
         MemoryStream    m_log;
         StreamWriter    m_logWriter;
-        Dictionary<string, ClientHandler> m_clients;
+        IDictionary<string, ClientHandler> m_clients;
         object m_listMutex = new object();
     }
 }
