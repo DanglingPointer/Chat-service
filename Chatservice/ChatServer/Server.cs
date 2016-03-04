@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using System.IO;
 using System.Threading.Tasks;
 using Chat.Formats;
@@ -58,8 +59,15 @@ namespace Chat.Server
                         {
                             lock (m_streamMutex)
                             {
-                                Request req = m_parser.ExtractRequest();
-                                IncomingRequest(m_username, req);
+                                try
+                                {
+                                    Request req = m_parser.ExtractRequest();
+                                    IncomingRequest(m_username, req);
+                                }
+                                catch (SerializationException)
+                                {   // Passes invalid request to the server if unable to deserialize
+                                    IncomingRequest(m_username, new Request("invalid request", ""));
+                                }
                             }
                         }
                     }
@@ -67,12 +75,12 @@ namespace Chat.Server
             }
             catch (IOException e)
             {
-                Console.WriteLine("Exception thrown by client {0}:\n\n{1}", m_username, e.ToString());
+                Console.WriteLine("Exception thrown by client {0}:\n\n{1}", m_username, e.Message);
                 Disconnect();
             }
             catch (SocketException e)
             {
-                Console.WriteLine("Exception thrown by client {0}:\n\n{1}", m_username, e.ToString());
+                Console.WriteLine("Exception thrown by client {0}:\n\n{1}", m_username, e.Message);
                 Disconnect();
             }
         }
@@ -103,7 +111,7 @@ namespace Chat.Server
                 Socket s = m_listener.AcceptSocket(); // blocks
                 var ch = new ClientHandler(s, nextManagerId, ServeRequest, EraseClient);
                 SendToAll += ch.SendResponse;
-                lock (m_listMutex)
+                lock (m_clientlistMutex)
                 {
                     m_clients[nextManagerId.ToString()] = ch;
                 }
@@ -131,7 +139,7 @@ namespace Chat.Server
                             {
                                 var client = m_clients[user];
                                 client.Username = newname;  // might throw an exception
-                                lock (m_listMutex)
+                                lock (m_clientlistMutex)
                                 {
                                     m_clients.Remove(user);
                                     m_clients[newname] = client;
@@ -190,8 +198,8 @@ namespace Chat.Server
                 m_clients[user].SendResponse((Response)response);
             }
             catch(Exception e)
-            {
-                Console.WriteLine(e.ToString());
+            {   // Including serialization fail on server's side
+                Console.WriteLine(e.Message);
                 m_clients[user].Disconnect();
             }
             finally
@@ -203,7 +211,7 @@ namespace Chat.Server
         /// <summary> Called by ClientManager when disconnecting </summary>
         private void EraseClient(string user)
         {
-            lock (m_listMutex)
+            lock (m_clientlistMutex)
             {
                 m_clients.Remove(user);
             }
@@ -233,6 +241,6 @@ namespace Chat.Server
         MemoryStream    m_log;
         StreamWriter    m_logWriter;
         IDictionary<string, ClientHandler> m_clients;
-        object m_listMutex = new object();
+        object m_clientlistMutex = new object();
     }
 }
