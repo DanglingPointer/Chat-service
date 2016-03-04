@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
-using Chat.Formats;
-using System.Runtime.Serialization.Json; // add System.ServiceModel.Web and
-                                         // System.Runtime.Serialization in References
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Chat.Formats;
 
 namespace Chat.Server
 {
@@ -20,6 +18,7 @@ namespace Chat.Server
         {
             m_socket = sock;
             m_stream = new NetworkStream(sock);
+            m_parser = new JsonParser(m_stream);
             m_username = clientId.ToString();
             m_nameSet = false;
             IncomingRequest += reqHandler;
@@ -43,7 +42,7 @@ namespace Chat.Server
         {
             lock (m_streamMutex)
             {
-                m_respSer.WriteObject(m_stream, resp);
+                m_parser.PutResponse(resp);
             }
         }
         /// <summary> Starts checking incoming requests, executes in parallell </summary>
@@ -59,7 +58,7 @@ namespace Chat.Server
                         {
                             lock (m_streamMutex)
                             {
-                                Request req = (Request)m_reqSer.ReadObject(m_stream);
+                                Request req = m_parser.ExtractRequest();
                                 IncomingRequest(m_username, req);
                             }
                         }
@@ -81,9 +80,8 @@ namespace Chat.Server
         NetworkStream   m_stream;
         string          m_username;
         bool            m_nameSet;
+        JsonParser      m_parser;
         object          m_streamMutex = new object();
-        DataContractJsonSerializer m_respSer = new DataContractJsonSerializer(typeof(Response));
-        DataContractJsonSerializer m_reqSer = new DataContractJsonSerializer(typeof(Request));
     }
     public class TCPServer
     {
@@ -123,10 +121,10 @@ namespace Chat.Server
             Response? response = null;
             try
             {
-                switch (req.Type)
+                switch (req.request)
                 {
                     case "login":
-                        string newname = req.Content;
+                        string newname = req.content;
                         try
                         {
                             if (!IsNameValid(user) && IsNameValid(newname) && !m_clients.ContainsKey(newname))
@@ -157,7 +155,7 @@ namespace Chat.Server
                     case "msg":
                         if (!IsNameValid(user))
                             throw new ProtocolViolationException();
-                        response = new Response(user, "message", req.Content);
+                        response = new Response(user, "message", req.content);
                         SendToAll((Response)response);
                         break;
                     case "help":
