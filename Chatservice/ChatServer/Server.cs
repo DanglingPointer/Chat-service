@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Chat.Server
 {
-    class ClientHandler
+    internal class ClientHandler
     {
         public event Action<string, Request> IncomingRequest;
         public event Action<string> ConnectionLost;
@@ -46,8 +46,8 @@ namespace Chat.Server
                 m_respSer.WriteObject(m_stream, resp);
             }
         }
-        /// <summary> Starts checking incoming requests </summary>
-        public void AsyncStart()
+        /// <summary> Starts checking incoming requests, executes in parallell </summary>
+        public void Start()
         {
             try
             {
@@ -85,9 +85,8 @@ namespace Chat.Server
         DataContractJsonSerializer m_respSer = new DataContractJsonSerializer(typeof(Response));
         DataContractJsonSerializer m_reqSer = new DataContractJsonSerializer(typeof(Request));
     }
-    class TCPServer
+    public class TCPServer
     {
-        public event Action<Response> SendToAll;
         public TCPServer(int port)
         {
             IPAddress ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
@@ -97,7 +96,7 @@ namespace Chat.Server
             m_logWriter.WriteLine("Server IP-address: {0}", ipAddress);
             m_clients = new Dictionary<string, ClientHandler>();
         }
-        public void Start()
+        public void Run()
         {
             m_listener.Start();
             long nextManagerId = -1;
@@ -110,13 +109,13 @@ namespace Chat.Server
                 {
                     m_clients[nextManagerId.ToString()] = ch;
                 }
-                ch.AsyncStart();
+                ch.Start();
                 --nextManagerId;
             }
         }
-        public async Task StartAsync()  // might be useful in bigger apps
+        public async Task RunAsync()  // might be useful in bigger apps
         {
-            await Task.Run(() => Start());
+            await Task.Run(() => Run());
         }
         /// <summary> Called by ClientManager when a request is received </summary>
         private void ServeRequest(string user, Request req)
@@ -226,6 +225,7 @@ namespace Chat.Server
             m_log.Position = prevPos;
             return content;
         }
+        private event Action<Response> SendToAll;
         TcpListener     m_listener;
         MemoryStream    m_log;
         StreamWriter    m_logWriter;
