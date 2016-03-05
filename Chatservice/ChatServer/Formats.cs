@@ -92,7 +92,7 @@ namespace Chat.Formats
             m_memstream.Position = 0;
 
             string serializedObj = m_memreader.ReadToEnd();
-            m_tcpwriter.WriteLine(serializedObj);   // Write() ??
+            m_tcpwriter.Write(serializedObj);   // WriteLine() ??
         }
         public void PutResponse(Response obj)
         {
@@ -101,11 +101,11 @@ namespace Chat.Formats
             m_memstream.Position = 0;
 
             string serializedObj = m_memreader.ReadToEnd();
-            m_tcpwriter.WriteLine(serializedObj);   // Write() ??
+            m_tcpwriter.Write(serializedObj);   // WriteLine() ??
         }
         public Request ExtractRequest()
         {
-            string serializedObj = m_tcpreader.ReadLine();  //ReadJsonObject() ??
+            string serializedObj = ReadJsonObject();  // m_tcpreader.ReadLine() ??
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
             m_memstream.Position = 0;
@@ -113,7 +113,7 @@ namespace Chat.Formats
         }
         public Response ExtractResponse()
         {
-            string serializedObj = m_tcpreader.ReadLine();  //ReadJsonObject() ??
+            string serializedObj = ReadJsonObject();  // m_tcpreader.ReadLine() ??
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
             m_memstream.Position = 0;
@@ -157,9 +157,9 @@ namespace Chat.Formats
             do
             {
                 symbol = m_tcpreader.Read();
-                if (symbol == 123) // {
+                if (symbol == 123) // '{'
                     ++opnCount;
-                else if (symbol == 125) // }
+                else if (symbol == 125) // '}'
                     ++clsCount;
                 if (opnCount != 0) temp += symbol;
             } while (opnCount != clsCount || opnCount == 0);
@@ -175,9 +175,9 @@ namespace Chat.Formats
 
             foreach(char symbol in s)
             {
-                if (symbol == 123) // {
+                if (symbol == 123) // '{'
                     ++opnCount;
-                else if (symbol == 125) // }
+                else if (symbol == 125) // '}'
                     ++clsCount;
                 if (opnCount != 0) temp += symbol;
                 if (opnCount == clsCount && opnCount != 0)
