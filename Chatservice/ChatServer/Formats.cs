@@ -24,10 +24,10 @@ namespace Chat.Formats
         { }
         [DataMember]
         public string request // Type
-        { get; }
+        { get; private set; }
         [DataMember]
         public string content // Content
-        { get; }
+        { get; private set; }
         public override string ToString()   // superfluous??
         {
             return string.Format("--Request--\nType: {0}\nContent: {1}", request, content);
@@ -53,19 +53,19 @@ namespace Chat.Formats
         { }
         [DataMember]
         public string sender // Sender
-        { get; }
+        { get; private set; }
         [DataMember]
         public string response // Type
-        { get; }
+        { get; private set; }
         [DataMember]
         public string content // Content
-        { get; }
+        { get; private set; }
         [DataMember]
         public string timestamp // TimeStamp
-        { get; }
+        { get; private set; }
         public override string ToString()   // superfluous??
         {
-            return string.Format("--Response--\nFrom: {2}\nType: {0}\nTime: {3}\nContent: {1}", 
+            return string.Format("--Response--\nFrom: {2}\nType: {0}\nTime: {3}\nContent: {1}",
                 response, content, sender, timestamp);
         }
     }
@@ -122,7 +122,7 @@ namespace Chat.Formats
         public string ConvertToJson(Request obj)
         {
             m_memstream.SetLength(0);
-            m_respSer.WriteObject(m_memstream, obj);
+            m_reqSer.WriteObject(m_memstream, obj);
             m_memstream.Position = 0;
             return m_memreader.ReadToEnd();
         }
@@ -133,6 +133,7 @@ namespace Chat.Formats
             m_memstream.Position = 0;
             return m_memreader.ReadToEnd();
         }
+        /// <summary> Converts a string consisting of one json-request </summary>
         public Request ConvertToRequest(string jsonString)
         {
             m_memstream.SetLength(0);
@@ -140,14 +141,16 @@ namespace Chat.Formats
             m_memstream.Position = 0;
             return (Request)m_reqSer.ReadObject(m_memstream);
         }
+        /// <summary> Converts a string consisting of one json-response </summary>
         public Response ConvertToResponse(string jsonString)
         {
             m_memstream.SetLength(0);
             m_memwriter.Write(jsonString);
             m_memstream.Position = 0;
-            return (Response)m_reqSer.ReadObject(m_memstream);
+            return (Response)m_respSer.ReadObject(m_memstream);
         }
-        /// <summary> Reads from the tcp stream. Absent '}' causes blocking. </summary>
+        /// <summary> Extracts first json-string from the tcp stream, invalid
+        /// json-syntacs or its absence causes blocking </summary>
         public string ReadJsonObject()
         {
             int opnCount = 0;
