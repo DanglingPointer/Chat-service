@@ -108,6 +108,7 @@ namespace Chat.Formats
             string serializedObj = m_tcpreader.ReadLine();  //ReadJsonObject() ??
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
+            m_memstream.Position = 0;
             return (Request)m_reqSer.ReadObject(m_memstream);
         }
         public Response ExtractResponse()
@@ -115,6 +116,7 @@ namespace Chat.Formats
             string serializedObj = m_tcpreader.ReadLine();  //ReadJsonObject() ??
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
+            m_memstream.Position = 0;
             return (Response)m_respSer.ReadObject(m_memstream);
         }
         public string ConvertToJson(Request obj)
@@ -135,12 +137,14 @@ namespace Chat.Formats
         {
             m_memstream.SetLength(0);
             m_memwriter.Write(jsonString);
+            m_memstream.Position = 0;
             return (Request)m_reqSer.ReadObject(m_memstream);
         }
         public Response ConvertToResponse(string jsonString)
         {
             m_memstream.SetLength(0);
             m_memwriter.Write(jsonString);
+            m_memstream.Position = 0;
             return (Response)m_reqSer.ReadObject(m_memstream);
         }
         /// <summary> Reads from the tcp stream. Absent '}' causes blocking. </summary>
