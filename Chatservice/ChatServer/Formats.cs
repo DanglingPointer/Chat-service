@@ -143,7 +143,7 @@ namespace Chat.Formats
             m_memwriter.Write(jsonString);
             return (Response)m_reqSer.ReadObject(m_memstream);
         }
-        /// <summary> Reads from the tcp stream </summary>
+        /// <summary> Reads from the tcp stream. Absent '}' causes blocking. </summary>
         public string ReadJsonObject()
         {
             int opnCount = 0;
@@ -157,14 +157,13 @@ namespace Chat.Formats
                     ++opnCount;
                 else if (symbol == 125) // }
                     ++clsCount;
-                temp += symbol;
-            } while (opnCount != clsCount);
+                if (opnCount != 0) temp += symbol;
+            } while (opnCount != clsCount || opnCount == 0);
             return temp;
         }
         /// <summary> Extracts all Json-objects (if any) from a string </summary>
         public string[] SplitJsonObjects(string s)
         {
-
             int opnCount = 0;
             int clsCount = 0;
             var strs = new List<string>();
@@ -176,8 +175,8 @@ namespace Chat.Formats
                     ++opnCount;
                 else if (symbol == 125) // }
                     ++clsCount;
-                temp += symbol;
-                if (opnCount == clsCount)
+                if (opnCount != 0) temp += symbol;
+                if (opnCount == clsCount && opnCount != 0)
                 {
                     strs.Add(string.Copy(temp));
                     temp = "";
