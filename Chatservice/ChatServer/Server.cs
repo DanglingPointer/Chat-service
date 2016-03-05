@@ -34,6 +34,10 @@ namespace Chat.Server
                 else throw new InvalidOperationException("Username cannot be changed");
             }
         }
+        public JsonParser Parser
+        {
+            get { return m_parser; }
+        }
         public void Disconnect()
         {
             m_stream.Close();
@@ -59,28 +63,23 @@ namespace Chat.Server
                         {
                             lock (m_streamMutex)
                             {
-                                try
-                                {
-                                    Request req = m_parser.ExtractRequest();
-                                    IncomingRequest(m_username, req);
-                                }
-                                catch (SerializationException)
-                                {   // Passes invalid request to the server if unable to deserialize
-                                    IncomingRequest(m_username, new Request("invalid request", ""));
-                                }
+                                Request req = m_parser.ExtractRequest();
+                                IncomingRequest(m_username, req);
                             }
                         }
                     }
                 });
             }
-            catch (IOException e)
+            catch (IOException)
             {
-                Console.WriteLine("Exception thrown by client {0}:\n\n{1}", m_username, e.Message);
+                Console.WriteLine("Connection lost with client {0}:\nDisconnecting client {0}",
+                    m_username);
                 Disconnect();
             }
-            catch (SocketException e)
+            catch (SerializationException)
             {
-                Console.WriteLine("Exception thrown by client {0}:\n\n{1}", m_username, e.Message);
+                Console.WriteLine("Cannot deserialize data from client {0}\nDisconnecting client {0}",
+                    m_username);
                 Disconnect();
             }
         }
@@ -97,9 +96,7 @@ namespace Chat.Server
         {
             IPAddress ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
             m_listener = new TcpListener(/*IPAddress.Any*/ipAddress, port);
-            m_log = new MemoryStream();
-            m_logWriter = new StreamWriter(m_log);
-            m_logWriter.WriteLine("Server IP-address: {0}", ipAddress);
+            m_log = "";
             m_clients = new Dictionary<string, ClientHandler>();
         }
         public void Run()
@@ -126,7 +123,7 @@ namespace Chat.Server
         /// <summary> Called by ClientManager when a request is received </summary>
         private void ServeRequest(string user, Request req)
         {
-            Response? response = null;
+            Response response;
             try
             {
                 switch (req.request)
@@ -138,7 +135,7 @@ namespace Chat.Server
                             if (!IsNameValid(user) && IsNameValid(newname) && !m_clients.ContainsKey(newname))
                             {
                                 var client = m_clients[user];
-                                client.Username = newname;  // might throw an exception
+                                client.Username = newname;  // might throw InvalidOperationException
                                 lock (m_clientlistMutex)
                                 {
                                     m_clients.Remove(user);
@@ -151,11 +148,11 @@ namespace Chat.Server
                         catch (InvalidOperationException)
                         {
                             response = new Response("error", "ERROR: Invalid username");
-                            m_clients[user].SendResponse((Response)response);
-                            return;
+                            m_clients[user].SendResponse(response);
+                            break;
                         }
-                        response = new Response("history", LogToString());
-                        m_clients[user].SendResponse((Response)response);
+                        response = new Response("history", m_log);
+                        m_clients[user].SendResponse(response);
                         break;
                     case "logout":
                         m_clients[user].Disconnect();
@@ -164,13 +161,14 @@ namespace Chat.Server
                         if (!IsNameValid(user))
                             throw new ProtocolViolationException();
                         response = new Response(user, "message", req.content);
-                        SendToAll((Response)response);
+                        SendToAll(response);
+                        m_log += m_clients[user].Parser.ConvertToJson(response);
                         break;
                     case "help":
                         if (!IsNameValid(user))
                             throw new ProtocolViolationException();
-                        response = new Response("info", "Request types:\nlogin\nlogout\nmsg\nnames\nhelp");
-                        m_clients[user].SendResponse((Response)response);
+                        response = new Response("info", "Request types: login, logout, msg, names, help");
+                        m_clients[user].SendResponse(response);
                         break;
                     case "names":
                         if (!IsNameValid(user))
@@ -181,7 +179,7 @@ namespace Chat.Server
                             names += (name + " ");
                         }
                         response = new Response("info", names);
-                        m_clients[user].SendResponse((Response)response);
+                        m_clients[user].SendResponse(response);
                         break;
                     default:
                         throw new InvalidDataException();
@@ -190,22 +188,17 @@ namespace Chat.Server
             catch (ProtocolViolationException)
             {
                 response = new Response("error", "ERROR: Login required");
-                m_clients[user].SendResponse((Response)response);
+                m_clients[user].SendResponse(response);
             }
             catch (InvalidDataException)
             {
                 response = new Response("error", "ERROR: Invalid request");
-                m_clients[user].SendResponse((Response)response);
+                m_clients[user].SendResponse(response);
             }
             catch(Exception e)
-            {   // Including serialization fail on server's side
+            {   // IOException and serialization fail on server's side
                 Console.WriteLine(e.Message);
                 m_clients[user].Disconnect();
-            }
-            finally
-            {
-                if (response != null)
-                    m_logWriter.WriteLine(response.ToString());
             }
         }
         /// <summary> Called by ClientManager when disconnecting </summary>
@@ -227,19 +220,10 @@ namespace Chat.Server
             }
             return true;
         }
-        private string LogToString()
-        {
-            long prevPos = m_log.Position;
-            m_log.Position = 0;
-            var sr = new StreamReader(m_log);
-            string content = sr.ReadToEnd();
-            m_log.Position = prevPos;
-            return content;
-        }
         private event Action<Response> SendToAll;
+
         TcpListener     m_listener;
-        MemoryStream    m_log;
-        StreamWriter    m_logWriter;
+        string          m_log;
         IDictionary<string, ClientHandler> m_clients;
         object m_clientlistMutex = new object();
     }

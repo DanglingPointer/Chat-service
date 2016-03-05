@@ -1,10 +1,10 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json; // add System.ServiceModel.Web and
                                          // System.Runtime.Serialization in References
-
 namespace Chat.Formats
 {
     /// <summary>
@@ -30,7 +30,7 @@ namespace Chat.Formats
         { get; }
         public override string ToString()   // superfluous??
         {
-            return string.Format("Request\nType: {0}\nContent: {1}", request, content);
+            return string.Format("--Request--\nType: {0}\nContent: {1}", request, content);
         }
     }
     /// <summary>
@@ -63,7 +63,7 @@ namespace Chat.Formats
         [DataMember]
         public string timestamp // TimeStamp
         { get; }
-        public override string ToString()
+        public override string ToString()   // superfluous??
         {
             return string.Format("--Response--\nFrom: {2}\nType: {0}\nTime: {3}\nContent: {1}", 
                 response, content, sender, timestamp);
@@ -105,19 +105,86 @@ namespace Chat.Formats
         }
         public Request ExtractRequest()
         {
-            string serializedObj = m_tcpreader.ReadLine();  //Read() ??
+            string serializedObj = m_tcpreader.ReadLine();  //ReadJsonObject() ??
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
             return (Request)m_reqSer.ReadObject(m_memstream);
         }
         public Response ExtractResponse()
         {
-            string serializedObj = m_tcpreader.ReadLine();  //Read() ??
+            string serializedObj = m_tcpreader.ReadLine();  //ReadJsonObject() ??
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
             return (Response)m_respSer.ReadObject(m_memstream);
         }
+        public string ConvertToJson(Request obj)
+        {
+            m_memstream.SetLength(0);
+            m_respSer.WriteObject(m_memstream, obj);
+            m_memstream.Position = 0;
+            return m_memreader.ReadToEnd();
+        }
+        public string ConvertToJson(Response obj)
+        {
+            m_memstream.SetLength(0);
+            m_respSer.WriteObject(m_memstream, obj);
+            m_memstream.Position = 0;
+            return m_memreader.ReadToEnd();
+        }
+        public Request ConvertToRequest(string jsonString)
+        {
+            m_memstream.SetLength(0);
+            m_memwriter.Write(jsonString);
+            return (Request)m_reqSer.ReadObject(m_memstream);
+        }
+        public Response ConvertToResponse(string jsonString)
+        {
+            m_memstream.SetLength(0);
+            m_memwriter.Write(jsonString);
+            return (Response)m_reqSer.ReadObject(m_memstream);
+        }
+        /// <summary> Reads from the tcp stream </summary>
+        public string ReadJsonObject()
+        {
+            int opnCount = 0;
+            int clsCount = 0;
+            string temp = "";
+            int symbol;
+            do
+            {
+                symbol = m_tcpreader.Read();
+                if (symbol == 123) // {
+                    ++opnCount;
+                else if (symbol == 125) // }
+                    ++clsCount;
+                temp += symbol;
+            } while (opnCount != clsCount);
+            return temp;
+        }
+        /// <summary> Extracts all Json-objects (if any) from a string </summary>
+        public string[] SplitJsonObjects(string s)
+        {
 
+            int opnCount = 0;
+            int clsCount = 0;
+            var strs = new List<string>();
+            string temp="";
+
+            foreach(char symbol in s)
+            {
+                if (symbol == 123) // {
+                    ++opnCount;
+                else if (symbol == 125) // }
+                    ++clsCount;
+                temp += symbol;
+                if (opnCount == clsCount)
+                {
+                    strs.Add(string.Copy(temp));
+                    temp = "";
+                }
+            }
+            return strs.ToArray();
+        }
         StreamReader m_tcpreader;
         StreamWriter m_tcpwriter;
 
@@ -128,37 +195,4 @@ namespace Chat.Formats
         DataContractJsonSerializer m_reqSer;
         DataContractJsonSerializer m_respSer;
     }
-    //internal class RequestJsonParser : JsonParser<Request>
-    //{
-    //    public RequestJsonParser(NetworkStream stream) :base(stream)
-    //    { }
-    //    public override Request ExtractObject()
-    //    {
-    //        return new Request();
-    //    }
-    //    public override void SendObject(Request obj)
-    //    {
-    //        m_memstream.SetLength(0);
-    //        m_ser.WriteObject(m_memstream, obj);
-    //        m_memstream.Position = 0;
-    //
-    //        string serializedObj = m_memreader.ReadToEnd();
-    //        m_tcpwriter.Write(serializedObj);
-    //    }
-    //}
-    //internal class ResponseJsonParser : JsonParser<Response>
-    //{
-    //    public ResponseJsonParser(NetworkStream stream) : base(stream)
-    //    { }
-    //    public override Response ExtractObject()
-    //    {
-    //        return new Response();
-    //    }
-    //    public override void SendObject(Response obj)
-    //    {
-    //        string serializedObj = string.Format("{'timestamp':{0},'sender':{1},'response':{2},'content':{3}}",
-    //            obj.TimeStamp, obj.Sender, obj.Type, obj.Content);
-    //        m_tcpwriter.Write(serializedObj);
-    //    }
-    //}
 }
