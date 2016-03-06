@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define WRITE_LOG
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Runtime.Serialization;
 using System.IO;
 using System.Threading.Tasks;
 using Chat.Formats;
+using System.Diagnostics;
 
 namespace Chat.Server
 {
@@ -98,14 +100,18 @@ namespace Chat.Server
             m_listener = new TcpListener(/*IPAddress.Any*/ipAddress, port);
             m_log = "";
             m_clients = new Dictionary<string, ClientHandler>();
+            Print(string.Format("Server initialized at ip-address {0} and port {1}", 
+                ipAddress.ToString(), port));
         }
         public void Run()
         {
             m_listener.Start();
+            Print("Listening...");
             long nextManagerId = -1;
             while (true)
             {
                 Socket s = m_listener.AcceptSocket(); // blocks
+                Print("Client accepted");
                 var ch = new ClientHandler(s, nextManagerId, ServeRequest, EraseClient);
                 SendToAll += ch.SendResponse;
                 lock (m_clientlistMutex)
@@ -141,6 +147,7 @@ namespace Chat.Server
                                     m_clients.Remove(user);
                                     m_clients[newname] = client;
                                 }
+                                Print(string.Format("Client login: {0}", newname));
                             }
                             else
                                 throw new InvalidOperationException();
@@ -156,6 +163,7 @@ namespace Chat.Server
                         break;
                     case "logout":
                         m_clients[user].Disconnect();
+                        Print(string.Format("Client logout: {0}", user));
                         break;
                     case "msg":
                         if (!IsNameValid(user))
@@ -219,6 +227,11 @@ namespace Chat.Server
                 return true;
             }
             return true;
+        }
+        [Conditional("WRITE_LOG")]
+        private void Print(string s)
+        {
+            Console.WriteLine(s);
         }
         private event Action<Response> SendToAll;
 
