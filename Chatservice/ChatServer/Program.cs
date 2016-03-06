@@ -4,7 +4,7 @@ using Chat.Server;
 
 namespace Chat
 {
-    class Program
+    class ServerProgram
     {
         static void Main(string[] args)
         {

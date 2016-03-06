@@ -125,15 +125,16 @@ namespace Chat.Server
         /// </summary>
         public TCPServer(int port)
         {
-            IPAddress[] addrList = Dns.GetHostEntry("localhost").AddressList;
-            Print("Local IPv4 addresses:");
-            foreach (IPAddress addr in addrList)
-                Print(string.Format("Local ip-address: {0}", addr.MapToIPv4().ToString()));
-            //IPAddress ipAddress = Dns.GetHostEntry("localhost").AddressList[0];
-            m_listener = new TcpListener(IPAddress.Any/*ipAddress*/, port);
+            m_listener = new TcpListener(IPAddress.Any, port);
             m_msglog = "";
             m_clients = new Dictionary<string, ClientHandler>();
-            Print(string.Format("Server initialized at ip-address <??> and port {0}", port));
+
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            string localIP="";
+            foreach (IPAddress ip in host.AddressList)
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                    localIP = ip.ToString();
+            Print(string.Format("Server initialized at ip-address {0} and port {1}", localIP , port));
         }
         /// <summary>
         /// Starts listening to new connections on the given port

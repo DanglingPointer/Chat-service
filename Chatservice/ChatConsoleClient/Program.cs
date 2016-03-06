@@ -15,9 +15,9 @@ namespace Chat
         {
             try
             {
-                Console.Write("Enter IPv4-address: ");
+                Console.Write("Enter server's IPv4-address: ");
                 string ipv4 = Console.ReadLine();
-                Console.Write("Enter port number: ");
+                Console.Write("Enter server's port number: ");
                 int port = Convert.ToInt32(Console.ReadLine());
                 var client = new ChatClient(ipv4, port);
                 client.ConnectionLost += PrintAbortMsg;
@@ -61,8 +61,11 @@ namespace Chat
             }
             catch (SocketException e)
             {
-                Console.WriteLine("Oops!.. Unable to connect to server.\n"
+                Console.WriteLine("Oops!.. Unable to connect to the server.\n"
                     + e.Message);
+                Console.WriteLine("Error code: {0}", e.ErrorCode);
+                Console.WriteLine("Socket error code: {0}", e.SocketErrorCode);
+                Console.WriteLine("Native error code: {0}", e.NativeErrorCode);
             }
             catch(Exception e)
             {
