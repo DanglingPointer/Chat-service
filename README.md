@@ -1,5 +1,7 @@
 # Chat-service
 
-Compiled executables for Windows, any CPU, can be found in `Chat-servise.zip`. `ChatServer.exe` takes port number as a command line argument. `ChatConsoleClient.exe` takes server's IPv4 address as a first command line argument and the server's port number as a second argument. Note that `Formats.cs` is the same for the client and the server. 
+Compiled executables for .NET4.5.2 (Any CPU), can be found in `Chat-servise.zip`. `ChatServer.exe` takes port number as a command line argument. 
 
-Happy chatting!
+Works fine when using localhost for both client and server, but socket error 10060 when using extern host/client:
+
+![Socket error](https://github.com/DanglingPointer/Chat-service/blob/master/SocketError.jpg)
