@@ -15,7 +15,11 @@ namespace Chat
         {
             try
             {
-                var client = new ChatClient(args[0], Convert.ToInt32(args[1]));
+                Console.Write("Enter IPv4-address: ");
+                string ipv4 = Console.ReadLine();
+                Console.Write("Enter port number: ");
+                int port = Convert.ToInt32(Console.ReadLine());
+                var client = new ChatClient(ipv4, port);
                 client.ConnectionLost += PrintAbortMsg;
                 client.ErrorReceived += PrintError;
                 client.InfoReceived += PrintInfo;
