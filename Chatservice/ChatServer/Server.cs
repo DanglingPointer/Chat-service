@@ -266,6 +266,7 @@ namespace Chat.Server
         /// </summary>
         private void EraseClient(string user)
         {
+            SendToAll -= m_clients[user].SendResponse;
             lock (m_clientlistMutex)
             {
                 m_clients.Remove(user);
