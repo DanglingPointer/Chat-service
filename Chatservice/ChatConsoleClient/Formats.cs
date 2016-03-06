@@ -7,6 +7,9 @@ using System.Runtime.Serialization.Json; // add System.ServiceModel.Web and
                                          // System.Runtime.Serialization in References
 namespace Chat.Formats
 {
+    // NB! Properties in Request and Response structs start with lowercase letters.
+    // That's really ugly, but is done for compatibility reasons. 
+
     /// <summary>
     /// Payload from a client to the server, immutable.
     /// Type: login, logout, msg, names, help
@@ -23,15 +26,11 @@ namespace Chat.Formats
         public Request(string type) :this(type, "None")
         { }
         [DataMember]
-        public string request // Type
+        public string request   // Type
         { get; private set; }
         [DataMember]
-        public string content // Content
+        public string content   // Content
         { get; private set; }
-        public override string ToString()   // superfluous??
-        {
-            return string.Format("--Request--\nType: {0}\nContent: {1}", request, content);
-        }
     }
     /// <summary>
     /// Payload from the server to a client, immutable.
@@ -52,29 +51,27 @@ namespace Chat.Formats
         public Response(string type, string content) :this("server", type, content)
         { }
         [DataMember]
-        public string sender // Sender
+        public string sender    // Sender
         { get; private set; }
         [DataMember]
-        public string response // Type
+        public string response  // Type
         { get; private set; }
         [DataMember]
-        public string content // Content
+        public string content   // Content
         { get; private set; }
         [DataMember]
         public string timestamp // TimeStamp
         { get; private set; }
-        public override string ToString()   // superfluous??
-        {
-            return string.Format("--Response--\nFrom: {2}\nType: {0}\nTime: {3}\nContent: {1}",
-                response, content, sender, timestamp);
-        }
     }
     public class JsonParser
     {
-        public JsonParser(NetworkStream stream)
+        /// <summary>
+        /// Constructs a new parser that reads/writes from/to an established TCP stream
+        /// </summary>
+        public JsonParser(NetworkStream tcpstream)
         {
-            m_tcpreader = new StreamReader(stream);
-            m_tcpwriter = new StreamWriter(stream);
+            m_tcpreader = new StreamReader(tcpstream);
+            m_tcpwriter = new StreamWriter(tcpstream);
             m_tcpwriter.AutoFlush = true;
 
             m_memstream = new MemoryStream();
@@ -85,6 +82,9 @@ namespace Chat.Formats
             m_reqSer    = new DataContractJsonSerializer(typeof(Request));
             m_respSer   = new DataContractJsonSerializer(typeof(Response));
         }
+        /// <summary>
+        /// Serializes a request to JSON and sends to the tcp stream
+        /// </summary>
         public void PutRequest(Request obj)
         {
             m_memstream.SetLength(0);
@@ -92,8 +92,11 @@ namespace Chat.Formats
             m_memstream.Position = 0;
 
             string serializedObj = m_memreader.ReadToEnd();
-            m_tcpwriter.Write(serializedObj);   // WriteLine() ??
+            m_tcpwriter.Write(serializedObj);
         }
+        /// <summary>
+        /// Serializes a response to JSON and sends to the tcp stream
+        /// </summary>
         public void PutResponse(Response obj)
         {
             m_memstream.SetLength(0);
@@ -101,24 +104,35 @@ namespace Chat.Formats
             m_memstream.Position = 0;
 
             string serializedObj = m_memreader.ReadToEnd();
-            m_tcpwriter.Write(serializedObj);   // WriteLine() ??
+            m_tcpwriter.Write(serializedObj);
         }
+        /// <summary>
+        /// Reads first request from the TCP stream and deserializes it.
+        /// No JSON objects in the stream causes blocking
+        /// </summary>
         public Request ExtractRequest()
         {
-            string serializedObj = ReadJsonObject();  // m_tcpreader.ReadLine() ??
+            string serializedObj = ReadJsonObject();
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
             m_memstream.Position = 0;
             return (Request)m_reqSer.ReadObject(m_memstream);
         }
+        /// <summary>
+        /// Reads first response from the TCP stream and deserializes it.
+        /// No JSON objects in the stream causes blocking
+        /// </summary>
         public Response ExtractResponse()
         {
-            string serializedObj = ReadJsonObject();  // m_tcpreader.ReadLine() ??
+            string serializedObj = ReadJsonObject();
             m_memstream.SetLength(0);
             m_memwriter.Write(serializedObj);
             m_memstream.Position = 0;
             return (Response)m_respSer.ReadObject(m_memstream);
         }
+        /// <summary>
+        /// Obtains JSON representation of a Request object
+        /// </summary>
         public string ConvertToJson(Request obj)
         {
             m_memstream.SetLength(0);
@@ -126,6 +140,9 @@ namespace Chat.Formats
             m_memstream.Position = 0;
             return m_memreader.ReadToEnd();
         }
+        /// <summary>
+        /// Obtains JSON representation of a Response object
+        /// </summary>
         public string ConvertToJson(Response obj)
         {
             m_memstream.SetLength(0);
@@ -133,7 +150,9 @@ namespace Chat.Formats
             m_memstream.Position = 0;
             return m_memreader.ReadToEnd();
         }
-        /// <summary> Converts a string consisting of one json-request </summary>
+        /// <summary> 
+        /// Deserializes a string consisting of one JSON-request 
+        /// </summary>
         public Request ConvertToRequest(string jsonString)
         {
             m_memstream.SetLength(0);
@@ -141,7 +160,9 @@ namespace Chat.Formats
             m_memstream.Position = 0;
             return (Request)m_reqSer.ReadObject(m_memstream);
         }
-        /// <summary> Converts a string consisting of one json-response </summary>
+        /// <summary> 
+        /// Deserializes a string consisting of one JSON-response 
+        /// </summary>
         public Response ConvertToResponse(string jsonString)
         {
             m_memstream.SetLength(0);
@@ -149,26 +170,9 @@ namespace Chat.Formats
             m_memstream.Position = 0;
             return (Response)m_respSer.ReadObject(m_memstream);
         }
-        /// <summary> Extracts first json-string from the tcp stream, invalid
-        /// json-syntacs or its absence causes blocking </summary>
-        public string ReadJsonObject()
-        {
-            int opnCount = 0;
-            int clsCount = 0;
-            string temp = "";
-            int symbol;
-            do
-            {
-                symbol = m_tcpreader.Read();
-                if (symbol == 123) // '{'
-                    ++opnCount;
-                else if (symbol == 125) // '}'
-                    ++clsCount;
-                if (opnCount != 0) temp += symbol;
-            } while (opnCount != clsCount || opnCount == 0);
-            return temp;
-        }
-        /// <summary> Extracts all Json-objects (if any) from a string </summary>
+        /// <summary> 
+        /// Extracts all JSON-objects (if any) from a string 
+        /// </summary>
         public string[] SplitJsonObjects(string s)
         {
             int opnCount = 0;
@@ -191,6 +195,26 @@ namespace Chat.Formats
                 }
             }
             return strs.ToArray();
+        }
+        /// <summary> 
+        /// Extracts first json-string from the tcp stream, invalid syntacs or its absence causes blocking 
+        /// </summary>
+        protected string ReadJsonObject()
+        {
+            int opnCount = 0;
+            int clsCount = 0;
+            string temp = "";
+            int symbol;
+            do
+            {
+                symbol = m_tcpreader.Read();
+                if (symbol == 123) // '{'
+                    ++opnCount;
+                else if (symbol == 125) // '}'
+                    ++clsCount;
+                if (opnCount != 0) temp += (char)symbol;
+            } while (opnCount != clsCount || opnCount == 0);
+            return temp;
         }
         StreamReader m_tcpreader;
         StreamWriter m_tcpwriter;

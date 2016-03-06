@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Net.Sockets;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Chat.Client;
 
 namespace Chat
 {
-    class Program
+    /// <summary>
+    /// Simple console program for testing client logic
+    /// </summary>
+    class ClientProgram
     {
         static bool alive = true;
         static void Main(string[] args)
@@ -22,27 +22,35 @@ namespace Chat
                 client.MessageReceived += PrintMessage;
 
                 Task.Run(() => client.Run());
-                Console.WriteLine("Commands:\nl - login\nm - send message\nn - request names\nh - help\n");
+                Console.WriteLine("Commands:\nl - login\nm - send message\nn - request names\nh - help\nlo - logout");
                 while (alive)
                 {
+                    bool b;
                     string command = Console.ReadLine();
                     switch (command)
                     {
                         case "l":
-                            Console.WriteLine("Enter username: ");
+                            Console.Write("Enter username: ");
                             string username = Console.ReadLine();
-                            client.LogIn(username);
+                            b = client.LogIn(username);
+                            Console.WriteLine("Operation successfull: {0}", b);
                             break;
                         case "m":
-                            Console.WriteLine("Enter message: ");
+                            Console.Write("Enter message: ");
                             string msg = Console.ReadLine();
-                            client.SendMessage(msg);
+                            b = client.SendMessage(msg);
+                            Console.WriteLine("Operation successfull: {0}", b);
                             break;
                         case "n":
-                            client.RequestNames();
+                            b = client.RequestNames();
+                            Console.WriteLine("Operation successfull: {0}", b);
                             break;
                         case "h":
-                            client.RequestHelp();
+                            b = client.RequestHelp();
+                            Console.WriteLine("Operation successfull: {0}", b);
+                            break;
+                        case "lo":
+                            client.LogOut();
                             break;
                     }
                 }
@@ -58,25 +66,25 @@ namespace Chat
             }
             finally
             {
-                Console.ReadKey();
+                Console.Read();
             }
         }
         static void PrintMessage(string msg)
         {
-            Console.WriteLine("--MESSAGE RECEIVED--\n" + msg);
+            Console.WriteLine("\n--MESSAGE RECEIVED--\n" + msg);
         }
         static void PrintError(string errmsg)
         {
-            Console.WriteLine("--ERROR RECEIVED--\n" + errmsg);
+            Console.WriteLine("\n--ERROR RECEIVED--\n" + errmsg);
         }
         static void PrintInfo(string info)
         {
-            Console.WriteLine("--INFO RECEIVED--\n" + info);
+            Console.WriteLine("\n--INFO RECEIVED--\n" + info);
         }
         static void PrintAbortMsg()
         {
             alive = false;
-            Console.WriteLine("We are finished!");
+            Console.WriteLine("\nWe are finished!");
         }
     }
 }

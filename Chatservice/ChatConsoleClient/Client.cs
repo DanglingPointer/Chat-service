@@ -6,7 +6,7 @@ using Chat.Formats;
 
 namespace Chat.Client
 {
-    class ChatClient
+    public class ChatClient
     {
         /// <summary>
         /// Connects to the server, but doesn't read any data yet
@@ -24,7 +24,7 @@ namespace Chat.Client
         public event Action             ConnectionLost;
         /// <summary>
         /// Starts checking incoming messages, blocks.
-        /// Proceeds each responses asynchronously
+        /// Proceeds each response asynchronously (fires the events)
         /// </summary>
         public void Run()
         {
@@ -55,6 +55,7 @@ namespace Chat.Client
                 m_client.Close();
             }
         }
+        // -------- Methods for sending different types of requests to the server ------------------
         public bool SendMessage(string text)
         {
             return SendRequest("msg", text);
@@ -76,6 +77,7 @@ namespace Chat.Client
             SendRequest("logout", "None");
             m_client.Close();
         }
+        //------------------------------------------------------------------------------------------
         private bool SendRequest(string type, string content)
         {
             try
