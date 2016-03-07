@@ -27,7 +27,7 @@
 			<Label Content="Type message:" FontSize="10" Foreground="Black" Height="24" DockPanel.Dock="Bottom"/>
 			<Label Content="Message history:" FontSize="10" Foreground="Black" DockPanel.Dock="Top" Height="24"/>
 			<Grid Background="White" VerticalAlignment="Stretch">
-				<FlowDocumentScrollViewer x:Name="chattextviwer">
+				<FlowDocumentScrollViewer x:Name="chattextviewer">
 					<FlowDocument x:Name="chattext"/>
 				</FlowDocumentScrollViewer>
 			</Grid>

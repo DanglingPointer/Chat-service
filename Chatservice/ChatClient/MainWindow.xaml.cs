@@ -12,6 +12,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using Microsoft.VisualBasic;
 using System.Windows.Media;
+using System.ComponentModel;
 using System.Windows.Markup;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
@@ -31,6 +32,7 @@ namespace Chat
             InitializeComponent();
             string ipaddr = "127.0.0.1";
             int port = 1234;
+            m_disp = Dispatcher.CurrentDispatcher;
 
             StartupEventArgs e = ((App)Application.Current).CmdParams;            
             if (e.Args.Length == 2)
@@ -105,20 +107,24 @@ namespace Chat
         }
         private void OnMessageReceived(string msg)
         {
-            Paragraph p = new Paragraph(new Run("-- "+DateTime.Now.ToLongTimeString() +  " --\n" + msg));
-            p.FontSize = 9;
-            p.FontFamily = new FontFamily("Arial");
-            chattext.Blocks.Add(p);
+            m_disp.Invoke(() =>
+            {
+                Paragraph p = new Paragraph(new Run(msg));
+                p.FontSize = 9;
+                p.FontFamily = new FontFamily("Arial");
+                chattext.Blocks.Add(p);
+            });
         }
         private void OnWindowLoaded(object sender, RoutedEventArgs e)
         {
-            Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.ApplicationIdle,
-                (Action)(() =>
-                {
-                    m_client.Run();
-                }));
-            OnLoginClick(null, null);
+            Task.Run(() =>
+            {
+                Thread.Sleep(500);
+                OnLoginClick(null, null);
+                m_client.Run();
+            });
         }
         ChatClient m_client;
+        Dispatcher m_disp;
     }
 }

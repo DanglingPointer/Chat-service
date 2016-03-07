@@ -108,7 +108,7 @@ namespace Chat.Client
                     ErrorReceived.BeginInvoke(resp.timestamp + "\n" + resp.content, null, null);
                     break;
                 case "message":
-                    MessageReceived.BeginInvoke(resp.timestamp + " " + resp.sender + "\n" + resp.content,
+                    MessageReceived.BeginInvoke(resp.timestamp + " " + resp.sender + " wrote:\n" + resp.content,
                         null, null);
                     break;
                 case "info":
