@@ -220,15 +220,11 @@ namespace Chat.Server
                         Print(string.Format("Message from client {0} sent to all", user));
                         break;
                     case "help":
-                        if (!IsNameValid(user))
-                            throw new ProtocolViolationException();
                         response = new Response("info", "Request types: login, logout, msg, names, help");
                         m_clients[user].SendResponse(response);
                         Print(string.Format("Info sent to client {0}", user));
                         break;
                     case "names":
-                        if (!IsNameValid(user))
-                            throw new ProtocolViolationException();
                         string names = "";
                         object clienlist = m_clients;
                         var volatileclientlist = (IDictionary<string, ClientHandler> )Thread.VolatileRead(ref clienlist);

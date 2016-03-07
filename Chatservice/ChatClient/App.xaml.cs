@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Markup;
 
-namespace ChatClient
+namespace Chat
 {
     /// <summary>
     /// Interaction logic for App.xaml

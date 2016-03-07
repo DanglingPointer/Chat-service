@@ -10,7 +10,10 @@ namespace Chat
         {
             try
             {
-                var server = new TCPServer(Convert.ToInt32(args[0]));
+                int port = 1234;
+                if (args.Length == 1)
+                    port = Convert.ToInt32(args[0]);
+                var server = new TCPServer(port);
                 server.Run();
             }
             catch (IndexOutOfRangeException)

@@ -1,11 +1,11 @@
-﻿<Window x:Class="ChatClient.MainWindow"
+﻿<Window x:Class="Chat.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:ChatClient"
+        xmlns:local="clr-namespace:Chat"
         mc:Ignorable="d"
-        Title="Chat Messenger" Height="525" Width="350" Background="#FF37E4B5" Closed="OnWindowClosed">
+        Title="Chat Messenger" Height="525" Width="350" Background="#FF37E4B5" Closed="OnWindowClosed" Loaded="OnWindowLoaded">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition></ColumnDefinition>
@@ -19,7 +19,7 @@
 					<ColumnDefinition/>
 					<ColumnDefinition/>
 				</Grid.ColumnDefinitions>
-				<Button Grid.Column="0" Content="Close" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnClosedClick"></Button>
+				<Button Grid.Column="0" Content="Login" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnLoginClick"></Button>
 				<Button Grid.Column="1" Content="Info" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnInfoClick"></Button>
 				<Button Grid.Column="2" Content="Names" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnNamesClick"></Button>
 			</Grid>
