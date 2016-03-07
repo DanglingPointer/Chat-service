@@ -5,32 +5,32 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ChatClient"
         mc:Ignorable="d"
-        Title="Chat Messenger" Height="525" Width="350" Background="#FF37E4B5" WindowStyle="ToolWindow" Closed="OnWindowClosed">
+        Title="Chat Messenger" Height="525" Width="350" Background="#FF37E4B5" Closed="OnWindowClosed">
 	<Grid>
 		<Grid.ColumnDefinitions>
 			<ColumnDefinition></ColumnDefinition>
 			<ColumnDefinition Width="20*"></ColumnDefinition>
 			<ColumnDefinition></ColumnDefinition>
 		</Grid.ColumnDefinitions>
-		<StackPanel Grid.Column="1">
-			<Label Content="Message history:" FontSize="10" Foreground="Black"/>
-			<Grid Height="300" Background="White">
-				<FlowDocumentScrollViewer x:Name="chattextviwer">
-					<FlowDocument x:Name="chattext"/>
-				</FlowDocumentScrollViewer>
-			</Grid>
-			<Label Content="Type message:" FontSize="10" Foreground="Black"/>
-			<TextBox x:Name="textpad" Height="60" TextWrapping="Wrap" PreviewKeyDown="OnTextPadKeyPressed"/>
-			<Grid Height="70">
+		<DockPanel Grid.Column="1" VerticalAlignment="Stretch" Height="Auto">
+			<Grid Height="70" DockPanel.Dock="Bottom">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition/>
 					<ColumnDefinition/>
 					<ColumnDefinition/>
 				</Grid.ColumnDefinitions>
-				<Button Grid.Column="0" Content="Send" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnSendClick"></Button>
+				<Button Grid.Column="0" Content="Close" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnClosedClick"></Button>
 				<Button Grid.Column="1" Content="Info" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnInfoClick"></Button>
 				<Button Grid.Column="2" Content="Names" HorizontalAlignment="Center" VerticalAlignment="Center" Width="50" Height="25" Click="OnNamesClick"></Button>
 			</Grid>
-		</StackPanel>
+			<TextBox x:Name="textpad" Height="70" TextWrapping="Wrap" PreviewKeyDown="OnTextPadKeyPressed" DockPanel.Dock="Bottom"/>
+			<Label Content="Type message:" FontSize="10" Foreground="Black" Height="24" DockPanel.Dock="Bottom"/>
+			<Label Content="Message history:" FontSize="10" Foreground="Black" DockPanel.Dock="Top" Height="24"/>
+			<Grid Background="White" VerticalAlignment="Stretch">
+				<FlowDocumentScrollViewer x:Name="chattextviwer">
+					<FlowDocument x:Name="chattext"/>
+				</FlowDocumentScrollViewer>
+			</Grid>
+		</DockPanel>
 	</Grid>
 </Window>
