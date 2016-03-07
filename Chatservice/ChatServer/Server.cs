@@ -271,6 +271,8 @@ namespace Chat.Server
         }
         private bool IsNameValid(string name)
         {
+            if (name.Length == 0)
+                return false;
             foreach(char letter in name)
             {
                 if (letter < 48 || letter > 122 || (letter > 57 && letter < 65)
