@@ -7,6 +7,9 @@ using System.Runtime.Serialization.Json; // add System.ServiceModel.Web and
                                          // System.Runtime.Serialization in References
 namespace Chat.Formats
 {
+    // NB! Properties in Request and Response structs start with lowercase letters.
+    // That's really ugly, but is done for compatibility reasons. 
+
     /// <summary>
     /// Payload from a client to the server, immutable.
     /// Type: login, logout, msg, names, help

@@ -102,20 +102,20 @@ namespace Chat.Client
         }
         private void ProceedResponse(Response resp)
         {
-            switch (resp.response)
+            switch (resp.Type)
             {
                 case "error":
-                    ErrorReceived.BeginInvoke(resp.timestamp + "\n" + resp.content, null, null);
+                    ErrorReceived.BeginInvoke(resp.TimeStamp + "\n" + resp.Content, null, null);
                     break;
                 case "message":
-                    MessageReceived.BeginInvoke(resp.timestamp + " " + resp.sender + " wrote:\n" + resp.content,
+                    MessageReceived.BeginInvoke(resp.TimeStamp + " " + resp.Sender + " wrote:\n" + resp.Content,
                         null, null);
                     break;
                 case "info":
-                    InfoReceived.BeginInvoke(resp.content, null, null);
+                    InfoReceived.BeginInvoke(resp.Content, null, null);
                     break;
                 case "history":
-                    string[] log = m_parser.SplitJsonObjects(resp.content);
+                    string[] log = m_parser.SplitJsonObjects(resp.Content);
                     foreach(string jsonmsg in log)
                     {
                         Response msg = m_parser.ConvertToResponse(jsonmsg);

@@ -1,4 +1,4 @@
-﻿#define CONSOLE_LOG
+﻿#define WRITE_LOG
 using System;
 using System.Net;
 using System.Net.Sockets;
@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
 using Chat.Formats;
-using System.Diagnostics;   // for [Conditional] attribute
+using System.Diagnostics;
 
 namespace Chat.Server
 {
@@ -286,7 +286,7 @@ namespace Chat.Server
         //[Conditional("WRITE_LOG")] // doesn't work with events
         private void Print(string s)
         {
-        #if CONSOLE_LOG
+        #if WRITE_LOG
             Console.WriteLine("--{0}--\n" + s, DateTime.Now.ToLongTimeString());
         #endif
         }
