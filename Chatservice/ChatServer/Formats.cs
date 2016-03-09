@@ -23,7 +23,7 @@ namespace Chat.Formats
             request = type;
             this.content = content;
         }
-        public Request(string type) :this(type, "None")
+        public Request(string type) :this(type, "")
         { }
         [DataMember]
         public string request   // Type

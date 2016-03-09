@@ -230,7 +230,8 @@ namespace Chat.Server
                         var volatileclientlist = (IDictionary<string, ClientHandler> )Thread.VolatileRead(ref clienlist);
                         foreach (string name in volatileclientlist.Keys)
                         {
-                            names += (name + "\n");
+                            if (IsNameValid(name))
+                                names += (name + "\n");
                         }
                         response = new Response("info", names);
                         m_clients[user].SendResponse(response);
