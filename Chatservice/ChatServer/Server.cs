@@ -85,6 +85,7 @@ namespace Chat.Server
                 {
                     while (true)
                     {
+                        Thread.Sleep(30);
                         if (m_stream.DataAvailable == true)
                         {
                             lock (m_streamMutex)
@@ -177,10 +178,10 @@ namespace Chat.Server
             Response response;
             try
             {
-                switch (req.request)
+                switch (req.Type)
                 {
                     case "login":
-                        string newname = req.content;
+                        string newname = req.Content;
                         try
                         {
                             if (!IsNameValid(user) && IsNameValid(newname) && !m_clients.ContainsKey(newname))
@@ -214,7 +215,7 @@ namespace Chat.Server
                     case "msg":
                         if (!IsNameValid(user))
                             throw new ProtocolViolationException();
-                        response = new Response(user, "message", req.content);
+                        response = new Response(user, "message", req.Content);
                         SendToAll(response);
                         m_msglog += m_clients[user].Parser.ConvertToJson(response);
                         Print(string.Format("Message from client {0} sent to all", user));

@@ -17,16 +17,16 @@ namespace Chat.Formats
     {
         public Request(string type, string content)
         {
-            request = type;
-            this.content = content;
+            Type = type;
+            Content = content;
         }
         public Request(string type) :this(type, "")
         { }
         [DataMember]
-        public string request   // Type
+        public string Type
         { get; private set; }
         [DataMember]
-        public string content   // Content
+        public string Content
         { get; private set; }
     }
     /// <summary>
@@ -39,25 +39,25 @@ namespace Chat.Formats
     {
         public Response(string sender, string type, string content)
         {
-            this.sender = sender;
-            response = type;
-            this.content = content;
-            timestamp = DateTime.Now.ToLongTimeString();
+            Sender = sender;
+            Type = type;
+            Content = content;
+            TimeStamp = DateTime.Now.ToLongTimeString();
         }
         /// <summary> Can be used with all types except 'message' </summary>
         public Response(string type, string content) :this("server", type, content)
         { }
         [DataMember]
-        public string sender    // Sender
+        public string Sender
         { get; private set; }
         [DataMember]
-        public string response  // Type
+        public string Type
         { get; private set; }
         [DataMember]
-        public string content   // Content
+        public string Content
         { get; private set; }
         [DataMember]
-        public string timestamp // TimeStamp
+        public string TimeStamp
         { get; private set; }
     }
     public class JsonParser

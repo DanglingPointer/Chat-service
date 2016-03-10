@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
@@ -33,6 +34,7 @@ namespace Chat.Client
             {
                 while (true)
                 {
+                    Thread.Sleep(30);
                     if (stream.DataAvailable == true)
                     {
                         try
