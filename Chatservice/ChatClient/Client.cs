@@ -18,6 +18,8 @@ namespace Chat.Client
             IPEndPoint endpt = new IPEndPoint(IPAddress.Parse(serverAddr), serverPort);
             m_client.Connect(endpt);    // might throw SocketException
             m_parser = new JsonParser(m_client.GetStream());
+
+            ConnectionLost += m_client.Close;
         }
         public event Action<string>     MessageReceived;
         public event Action<string>     ErrorReceived;
@@ -51,10 +53,11 @@ namespace Chat.Client
                     }
                 }
             }
+            catch (ObjectDisposedException) // ConnectionLost has already been fired
+            { }
             catch
             {
-                ConnectionLost.BeginInvoke(null, null);
-                m_client.Close();
+                ConnectionLost.Invoke();
             }
         }
         // -------- Methods for sending different types of requests to the server ------------------
@@ -95,10 +98,13 @@ namespace Chat.Client
             {
                 return false;
             }
+            catch (ObjectDisposedException)
+            {   // ConnectionLost has already been fired
+                return false;
+            }
             catch
             {
-                ConnectionLost.BeginInvoke(null, null);
-                m_client.Close();
+                ConnectionLost.Invoke();
                 return false;
             }
         }
@@ -107,15 +113,18 @@ namespace Chat.Client
             switch (resp.Type)
             {
                 case "error":
-                    ErrorReceived.BeginInvoke(resp.TimeStamp + "\n" + resp.Content, null, null);
-                    break;
+                    if (ErrorReceived != null)
+                        ErrorReceived.BeginInvoke(resp.TimeStamp + "\n" + resp.Content, null, null);
+                    return;
                 case "message":
-                    MessageReceived.BeginInvoke(resp.TimeStamp + " " + resp.Sender + " wrote:\n" + resp.Content,
+                    if (MessageReceived != null)
+                        MessageReceived.BeginInvoke(resp.TimeStamp + " " + resp.Sender + " wrote:\n" + resp.Content,
                         null, null);
-                    break;
+                    return;
                 case "info":
-                    InfoReceived.BeginInvoke(resp.Content, null, null);
-                    break;
+                    if (InfoReceived != null)
+                        InfoReceived.BeginInvoke(resp.Content, null, null);
+                    return;
                 case "history":
                     string[] log = m_parser.SplitJsonObjects(resp.Content);
                     foreach(string jsonmsg in log)
@@ -123,7 +132,7 @@ namespace Chat.Client
                         Response msg = m_parser.ConvertToResponse(jsonmsg);
                         ProceedResponse(msg);
                     }
-                    break;
+                    return;
             }
         }
         TcpClient       m_client;

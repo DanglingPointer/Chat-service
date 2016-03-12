@@ -78,10 +78,11 @@ namespace Chat.Server
         /// </summary>
         public void Start()
         {
-            try
-            {
+            if (WriteLog != null)
                 WriteLog(m_logSignature + string.Format("ClientHandler for client {0} started", Username));
-                Task.Run(() =>
+            Task.Run(() =>
+            {
+                try
                 {
                     while (true)
                     {
@@ -95,22 +96,25 @@ namespace Chat.Server
                             }
                         }
                     }
-                });
-            }
-            catch (IOException)
-            {
-                WriteLog(m_logSignature + string.Format("Connection lost with client {0}:\nDisconnecting client {0}",
-                    m_username));
-                Disconnect();
-            }
-            catch (SerializationException)
-            {
-                WriteLog(m_logSignature + string.Format("Cannot deserialize data from client {0}\nDisconnecting client {0}",
-                    m_username));
-                Disconnect();
-            }
+                }
+                catch (ObjectDisposedException) // already disconnected
+                { }
+                catch (SerializationException)
+                {
+                    if (WriteLog != null)
+                        WriteLog(m_logSignature + string.Format("Cannot deserialize data from client {0}\nDisconnecting client {0}",
+                        m_username));
+                    Disconnect();
+                }
+                catch(Exception e)
+                {
+                    if (WriteLog != null)
+                        WriteLog(m_logSignature + string.Format("Exception from client {0}:\n{1}\nDisconnecting client {0}",
+                        m_username, e.ToString()));
+                    Disconnect();
+                }
+            });
         }
-
         Socket          m_socket;
         NetworkStream   m_stream;
         string          m_username;
@@ -142,24 +146,34 @@ namespace Chat.Server
         /// </summary>
         public void Run()
         {
-            m_listener.Start();
-            Print("Listening...");
-            long nextManagerId = -1;
-            while (true)
+            try
             {
-                Socket s = m_listener.AcceptSocket(); // blocks
-                Print("Client accepted");
-                var ch = new ClientHandler(s, nextManagerId);
-                ch.IncomingRequest += ServeRequest;
-                ch.ConnectionLost += EraseClient;
-                ch.WriteLog += Print;
-                SendToAll += ch.SendResponse;
-                lock (m_clientlistMutex)
+                m_listener.Start();
+                Print("Listening...");
+                long nextManagerId = -1;
+                while (true)
                 {
-                    m_clients[nextManagerId.ToString()] = ch;
+                    Socket s = m_listener.AcceptSocket(); // blocks
+                    Print("Client accepted");
+                    var ch = new ClientHandler(s, nextManagerId);
+                    ch.IncomingRequest += ServeRequest;
+                    ch.ConnectionLost += EraseClient;
+                    ch.WriteLog += Print;
+                    SendToAll += ch.SendResponse;
+                    lock (m_clientlistMutex)
+                    {
+                        m_clients[nextManagerId.ToString()] = ch;
+                    }
+                    ch.Start();
+                    --nextManagerId;
                 }
-                ch.Start();
-                --nextManagerId;
+            }
+            catch(Exception e)
+            {
+                Print(string.Format("Server stopped functioning:\n{0}", e.ToString()));
+                foreach (ClientHandler ch in m_clients.Values)
+                    ch.Disconnect();
+                Environment.Exit(-1);
             }
         }
         /// <summary>
@@ -292,7 +306,6 @@ namespace Chat.Server
         #endif
         }
         private event Action<Response> SendToAll;
-
         TcpListener     m_listener;
         string          m_msglog;
         IDictionary<string, ClientHandler> m_clients;

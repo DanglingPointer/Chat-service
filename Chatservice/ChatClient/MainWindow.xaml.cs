@@ -37,10 +37,14 @@ namespace Chat
             try
             {
                 m_client = new ChatClient(ipaddr, port);
-                //m_client.ConnectionLost += ShowAbortMsg;
                 m_client.ErrorReceived += OnErrorReceived;
                 m_client.InfoReceived += OnInfoReceived;
                 m_client.MessageReceived += OnMessageReceived;
+                m_client.ConnectionLost += (() =>
+                {
+                    MessageBox.Show("Connection failed. Exiting application.", "Error");
+                    Environment.Exit(-1);
+                });
             }
             catch (Exception ex)
             {
