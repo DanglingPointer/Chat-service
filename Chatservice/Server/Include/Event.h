@@ -63,65 +63,43 @@ private:
     std::forward_list<Func> m_handlers;
 };
 
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ \\
-// +                                                            + \\
-// +               Example use of Event class                   + \\
-// +                                                            + \\
-// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ \\
-
-std::mutex cout_mutex;
-
-class Worker : public Event<int, Worker>,
-    public Event<char, Worker>
-{
-public:
-    typedef Event<int, Worker> IntEvent;
-    typedef Event<char, Worker> CharEvent;
-
-    void Run()
-    {
-        IntEvent::FireAsync(123, this);
-        CharEvent::FireAsync('a', this);
-    }
-    void foo1(int i, Worker* p)
-    {
-        using namespace std::chrono_literals;
-
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-
-        {
-            std::lock_guard<std::mutex> guard(cout_mutex);
-            std::cout << "Foo1: " << i << std::endl;
-        }
-
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-
-        {
-            std::lock_guard<std::mutex> guard(cout_mutex);
-            std::cout << "Foo1: " << i << std::endl;
-        }
-
-    }
-};
-
-void foo2(char i, Worker* p)
-{
-    using namespace std::chrono_literals;
-
-    std::this_thread::sleep_for(1s);
-    {
-        std::lock_guard<std::mutex> guard(cout_mutex);
-        std::cout << "Foo2: " << i << std::endl;
-    }
-
-    std::this_thread::sleep_for(1s);
-    {
-        std::lock_guard<std::mutex> guard(cout_mutex);
-        std::cout << "Foo2: " << i << std::endl;
-    }
-}
-char *strfoo()
-{
-    char *str = "This is my string";
-    return str;
-}
+//// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ \\
+//// +                                                            + \\
+//// +               Example use of Event class                   + \\
+//// +                                                            + \\
+//// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ \\
+//
+//std::mutex cout_mutex;
+//
+//class Worker : public Event<int, Worker>,
+//    public Event<char, Worker>
+//{
+//public:
+//    typedef Event<int, Worker> IntEvent;
+//    typedef Event<char, Worker> CharEvent;
+//
+//    void Run()
+//    {
+//        IntEvent::FireAsync(123, this);
+//        CharEvent::FireAsync('a', this);
+//    }
+//    void foo1(int i, Worker* p)
+//    {
+//        using namespace std::chrono_literals;
+//
+//        std::this_thread::sleep_for(std::chrono::seconds(2));
+//
+//        {
+//            std::lock_guard<std::mutex> guard(cout_mutex);
+//            std::cout << "Foo1: " << i << std::endl;
+//        }
+//
+//        std::this_thread::sleep_for(std::chrono::seconds(2));
+//
+//        {
+//            std::lock_guard<std::mutex> guard(cout_mutex);
+//            std::cout << "Foo1: " << i << std::endl;
+//        }
+//
+//    }
+//};

@@ -1,9 +1,9 @@
 #pragma once
-#include<mutex>
+#include <mutex>
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include"Event.h"
-#include"Serializer.h"
+#include "Event.h"
+#include "ByteBuffer.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -20,9 +20,10 @@ public:
         WORD wVersionRequested;
         WSADATA wsaData;
         wVersionRequested = MAKEWORD(2, 2);
-        if (WSAStartup(wVersionRequested, &wsaData))
+        if (WSAStartup(wVersionRequested, &wsaData)) {
             std::cout << "WSAStratup error" << std::endl;
-
+            exit(1);
+        }
     }
 
     void SendDgram(TDgram& dgram)
@@ -41,6 +42,7 @@ public:
     void RecvDgram(TDgram *poutmsg)
     {
         // ... retrieve a byte array from the tcp stream...
+        
         int length = TBuffer::SIZE;
         byte *pdata = new byte[length];
 
