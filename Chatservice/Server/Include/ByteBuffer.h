@@ -1,24 +1,13 @@
 #pragma once
 #include<cstring>
 #include<type_traits>
-
-typedef unsigned char byte;
+#include"Types.h"
 
 // TObj - type to serialize
 // TAttrs - dynamically allocated attributes of U
 // Doesn't work with classes containing nested dynamically allocated members
 template<class TObj, class... TAttrs> class ByteBuffer
 {
-    // Helper used for determining the total size of template args
-    template<typename... Args> struct Size;
-    template<> struct Size<>
-    {
-        static constexpr size_t value = 0;
-    };
-    template<typename T, typename... Args> struct Size<T, Args...>
-    {
-        static constexpr size_t value = sizeof(T) + Size<Args...>::value;
-    };
     // Workaround because of the lack of partial template specialization for functions
     typedef std::integral_constant<byte, 0> ValArg;
     typedef std::integral_constant<byte, 1> PtrArg;

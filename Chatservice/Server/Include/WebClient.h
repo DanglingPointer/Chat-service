@@ -1,7 +1,9 @@
+// https://msdn.microsoft.com/en-us/library/windows/desktop/bb530742(v=vs.85).aspx
+
 #pragma once
 #include <mutex>
 #include <winsock2.h>
-#include <ws2tcpip.h>
+#include <WS2tcpip.h>
 #include "Event.h"
 #include "ByteBuffer.h"
 
@@ -14,14 +16,12 @@ public:
     typedef typename TData::BufferType TBuffer;
     typedef typename TData::MySerType TDgram;
 
-
     WebClient() :m_buffer(), m_writeLock()
     {
-        WORD wVersionRequested;
         WSADATA wsaData;
-        wVersionRequested = MAKEWORD(2, 2);
+		WORD wVersionRequested = MAKEWORD(2, 2);
         if (WSAStartup(wVersionRequested, &wsaData)) {
-            std::cout << "WSAStratup error" << std::endl;
+            std::cerr << "WSAStartup error" << std::endl;
             exit(1);
         }
     }
