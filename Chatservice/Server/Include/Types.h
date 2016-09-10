@@ -4,6 +4,10 @@
 typedef unsigned char	byte;
 typedef char			sbyte;
 
+<<<<<<< HEAD
+#if 0
+=======
+>>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
 // Helper used for determining the total size of template args pack
 template<typename... Args> struct Size;
 template<> struct Size<>
@@ -117,3 +121,100 @@ public:
     My_t& operator=(const My_t&)    = default;
     My_t& operator=(My_t&&)         = default;
 };
+<<<<<<< HEAD
+#endif
+//--------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+// Struct generator (generates class with one member of each type in TArgs and a setter and getter methods)
+template<class... TArgs>
+class StructGen;
+
+//--------------------------------------------------------------------------------------------------
+// Get substruct by index of its first template argument
+template<class TStruct, int INDEX>
+struct IndSubstruct;
+
+template<class TFirst, class... TRest, int INDEX>
+struct IndSubstruct<StructGen<TFirst, TRest...>, INDEX>
+{
+    typedef typename IndSubstruct<StructGen<TRest...>, INDEX - 1>::Result_t Result_t;
+};
+template<class TFirst, class... TRest>
+struct IndSubstruct<StructGen<TFirst, TRest...>, 0>
+{
+    typedef StructGen<TFirst, TRest...> Result_t;
+};
+//--------------------------------------------------------------------------------------------------
+// Get substruct by type of its first template argument
+template<class TStruct, class T>
+struct TypeSubstruct;
+
+template<class T, class TFirst, class... TRest>
+struct TypeSubstruct<StructGen<TFirst, TRest...>, T>
+{
+    typedef typename TypeSubstruct<StructGen<TRest...>, T>::Result_t Result_t;
+};
+template<class T, class... TRest>
+struct TypeSubstruct<StructGen<T, TRest...>, T>
+{
+    typedef StructGen<T, TRest...> Result_t;
+};
+//--------------------------------------------------------------------------------------------------
+// Struct generator definitions
+template<class TFirst, class... TRest>
+class StructGen<TFirst, TRest...> : protected StructGen<TRest...>
+{
+public:
+    typedef StructGen<TFirst, TRest...> My_t;
+    typedef StructGen<TRest...>         Base_t;
+
+    template<
+        class TFirstArg,
+        class... TRestArgs,
+        class = std::enable_if_t<
+        !std::is_base_of<My_t, std::decay_t<TFirstArg>>::value>
+    >
+    StructGen(TFirstArg&& arg, TRestArgs&&... args)
+    : Base_t(std::forward<TRestArgs>(args)...), m_var(std::forward<TFirstArg>(arg))
+    { }
+    StructGen()                     = default;
+    StructGen(const My_t&)          = default;
+    StructGen(My_t&&)               = default;
+    My_t& operator=(const My_t&)    = default;
+    My_t& operator=(My_t&&)         = default;
+
+    template<int INDEX>
+    const auto& Get() const noexcept
+    {
+        using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
+        return this->Parent_t::m_var;
+    }
+    template<class TMember>
+    const TMember& Get() const noexcept
+    {
+        using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
+        return this->Parent_t::m_var;
+    }
+
+    template<int INDEX, class T>
+    void Set(T&& value)
+    {
+        using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
+        this->Parent_t::m_var = std::forward<T>(value);
+    }
+    template<class TMember, class T>
+    void Set(T&& value)
+    {
+        using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
+        this->Parent_t::m_var = std::forward<T>(value);
+    }
+
+protected:
+    TFirst m_var;
+};
+
+template<>
+class StructGen<> { };
+
+=======
+>>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223

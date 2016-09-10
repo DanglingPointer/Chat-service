@@ -39,12 +39,20 @@ typedef Factory<CharBuilder, IntBuilder, BoolBuilder> MyFactory;
 
 
 
+<<<<<<< HEAD
+//typedef Typelist<int, char, double> DgramImpl;
+=======
 typedef Typelist<int, char, double> DgramImpl;
+>>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
 enum
 {
     INTMEMBER = 0, CHARMEMBER = 1, DOUBLEMEMBER = 2
 };
+<<<<<<< HEAD
+typedef StructGen<int, char, double> Datagram;
+=======
 typedef DataContainer<DgramImpl> Datagram;
+>>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
 
 int main()
 {
@@ -57,10 +65,20 @@ int main()
 
     std::cout << temp.Get<INTMEMBER>() << ' ' << temp.Get<CHARMEMBER>() << 
         ' ' << temp.Get<DOUBLEMEMBER>() << std::endl;
+<<<<<<< HEAD
+    std::cout << temp.Get<int>() << ' ' << temp.Get<char>() <<
+        ' ' << temp.Get<double>() << std::endl;
+
+    std::cout << temp2.Get<INTMEMBER>() << ' ' << temp2.Get<CHARMEMBER>() <<
+        ' ' << temp2.Get<DOUBLEMEMBER>() << std::endl;
+    std::cout << temp2.Get<int>() << ' ' << temp2.Get<char>() <<
+        ' ' << temp2.Get<double>() << std::endl;
+=======
 
 
     std::cout << temp2.Get<INTMEMBER>() << ' ' << temp2.Get<CHARMEMBER>() <<
         ' ' << temp2.Get<DOUBLEMEMBER>() << std::endl;
+>>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
 
 
 
@@ -77,6 +95,8 @@ int main()
 
 	//std::cout << arr[0] << arr[1] << arr[2];
 
+<<<<<<< HEAD
+=======
 	//std::for_each(std::begin(arr), std::end(arr), [](int& i) { i *= 2; });
 
 	//std::cout << arr[0] << arr[1] << arr[2];
@@ -86,6 +106,7 @@ int main()
 	//std::cout << "\nLong string size: " << sizeof(s1) << std::endl
 	//	<< "Short string size: " << sizeof(s2) << std::endl;
 
+>>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
 
 
 	system("pause");
