@@ -7,7 +7,7 @@
 class Buffer
 {
 public:
-	Buffer(std::size_t length)
+	explicit Buffer(std::size_t length)
 		:m_pData(std::make_unique<byte[]>(length)), m_pTail(m_pData.get() + length)
 	{ }
 	Buffer(std::unique_ptr<byte[]>&& data, std::size_t length) noexcept
@@ -33,10 +33,10 @@ public:
 		m_pTail = rhs.m_pTail;
 		return *this;
 	}
-	std::size_t get_Length() const { return m_pTail - m_pData.get(); }
-	byte *get_Tail() const { return m_pTail; }
-	byte *get_Data() const { return m_pData.get(); }
-	byte *get_Data(std::size_t pos) const { return &m_pData[pos]; }
+	std::size_t get_Length() const noexcept { return m_pTail - m_pData.get(); }
+	byte *get_Tail() const noexcept { return m_pTail; }
+	byte *get_Data() const noexcept { return m_pData.get(); }
+	byte *get_Data(std::size_t pos) const noexcept { return &m_pData[pos]; }
 	void IncreaseBy(std::size_t amount)
 	{
 		std::size_t prevLen = get_Length();

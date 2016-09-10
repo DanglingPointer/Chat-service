@@ -6,32 +6,32 @@
 #include<iostream>
 
 template<
-    class Arg,          // event argument type
+    class TArg,          // event argument type
     class Caller,       // type firing the event
     class Ret = void>   // return type
     class Event
 {
 public:
-    typedef Event<Arg, Caller, Ret> Myt;
-    typedef Arg Arg;
-    typedef Caller Caller;
-    typedef Ret Ret;
-    typedef std::function<Ret(const Arg&, Caller*)> Func;
+    typedef Event<TArg, Caller, Ret> My_t;
+    typedef TArg Arg_t;
+    typedef Caller Caller_t;
+    typedef Ret Ret_t;
+    typedef std::function<Ret_t(const Arg_t&, Caller_t*)> Func_t;
 
     Event() :m_handlers()
     { }
-    Event(const Myt&) = delete;
-    Myt operator=(const Myt&) = delete;
+    Event(const My_t&) = delete;
+    My_t operator=(const My_t&) = delete;
 
     template<typename T> void AddHandler(const T& foo)
     {
-        m_handlers.push_front(Func(foo));
+        m_handlers.push_front(Func_t(foo));
     }
     template<typename T> void RemoveHandler(const T& foo)
     {
-        Func temp(foo);
-        m_handlers.remove_if([&temp](const Func& f) {
-            return f.target<Ret(const Arg&, Caller*)>() == temp.target<Ret(const Arg&, Caller*)>();
+        Func_t temp(foo);
+        m_handlers.remove_if([&temp](const Func_t& f) {
+            return f.target<Ret_t(const Arg_t&, Caller_t*)>() == temp.target<Ret_t(const Arg_t&, Caller_t*)>();
         });
     }
     void RemoveAll()
@@ -40,19 +40,19 @@ public:
     }
 
 protected:
-    Ret Invoke(const Arg& arg, Caller *pobj) const
+    Ret_t Invoke(const Arg_t& arg, Caller_t *pobj) const
     {
         if (m_handlers.begin() != m_handlers.end())
             return (m_handlers.begin())->operator()(arg, pobj);
         throw std::out_of_range("");
     }
-    void Fire(const Arg& arg, Caller *pobj) const
+    void Fire(const Arg_t& arg, Caller_t *pobj) const
     {
         for (const auto& handler : m_handlers)
             if (handler)
                 handler(arg, pobj);
     }
-    void FireAsync(const Arg& arg, Caller *pobj) const
+    void FireAsync(const Arg_t& arg, Caller_t *pobj) const
     {
         for (const auto& handler : m_handlers)
             if (handler)
@@ -60,7 +60,7 @@ protected:
     }
 
 private:
-    std::forward_list<Func> m_handlers;
+    std::forward_list<Func_t> m_handlers;
 };
 
 //// ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ \\

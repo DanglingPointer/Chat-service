@@ -4,10 +4,7 @@
 typedef unsigned char	byte;
 typedef char			sbyte;
 
-<<<<<<< HEAD
 #if 0
-=======
->>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
 // Helper used for determining the total size of template args pack
 template<typename... Args> struct Size;
 template<> struct Size<>
@@ -121,7 +118,6 @@ public:
     My_t& operator=(const My_t&)    = default;
     My_t& operator=(My_t&&)         = default;
 };
-<<<<<<< HEAD
 #endif
 //--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
@@ -215,6 +211,3 @@ protected:
 
 template<>
 class StructGen<> { };
-
-=======
->>>>>>> b8aaea908a21c3071332ce04f25480102fcc7223
