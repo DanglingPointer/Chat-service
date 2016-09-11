@@ -171,7 +171,7 @@ public:
         !std::is_base_of<My_t, std::decay_t<TFirstArg>>::value>
     >
     StructGen(TFirstArg&& arg, TRestArgs&&... args)
-    : Base_t(std::forward<TRestArgs>(args)...), m_var(std::forward<TFirstArg>(arg))
+        : Base_t(std::forward<TRestArgs>(args)...), m_var(std::forward<TFirstArg>(arg))
     { }
     StructGen()                     = default;
     StructGen(const My_t&)          = default;
@@ -179,19 +179,42 @@ public:
     My_t& operator=(const My_t&)    = default;
     My_t& operator=(My_t&&)         = default;
 
-    template<int INDEX>
+    // Get by index methods
+    template<int INDEX,
+        class = std::enable_if_t<!std::is_fundamental<
+            typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
+        >::value>>
     const auto& Get() const noexcept
     {
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         return this->Parent_t::m_var;
     }
-    template<class TMember>
+    template<int INDEX,
+        class = std::enable_if_t<std::is_fundamental<
+            typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
+        >::value>>
+    auto Get() const noexcept
+    {
+        using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
+        return this->Parent_t::m_var;
+    }
+    // Get by type methods
+    template<class TMember,
+        class = std::enable_if_t<!std::is_fundamental<TMember>::value>>
     const TMember& Get() const noexcept
     {
         using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
         return this->Parent_t::m_var;
     }
+    template<class TMember,
+        class = std::enable_if_t<std::is_fundamental<TMember>::value>>
+    TMember Get() const noexcept
+    {
+        using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
+        return this->Parent_t::m_var;
+    }
 
+    // Set methods
     template<int INDEX, class T>
     void Set(T&& value)
     {
@@ -206,6 +229,7 @@ public:
     }
 
 protected:
+    typedef TFirst                      Var_t;
     TFirst m_var;
 };
 

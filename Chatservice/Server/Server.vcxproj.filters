@@ -27,7 +27,7 @@
     <ClInclude Include="Include\Serialization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\Types.h">
+    <ClInclude Include="Include\Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

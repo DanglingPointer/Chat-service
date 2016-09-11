@@ -13,7 +13,7 @@
 template<class TData> class WebClient
 {
 public:
-    typedef typename TData::BufferType TBuffer;
+    typedef typename TData::Buffer_t TBuffer;
     typedef typename TData::MySerType TDgram;
 
     WebClient() :m_buffer(), m_writeLock()

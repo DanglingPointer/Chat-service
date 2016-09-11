@@ -2,50 +2,63 @@
 #include <cstring>
 #include <type_traits>
 #include <memory>
-#include "Types.h"
+#include "Util.h"
 
-class Buffer
+
+class Buffer // obsolete?
 {
 public:
-	explicit Buffer(std::size_t length)
-		:m_pData(std::make_unique<byte[]>(length)), m_pTail(m_pData.get() + length)
+    typedef std::unique_ptr<byte[]> UPtr_t;
+    typedef byte *Iter_t;
+    typedef std::size_t Len_t;
+
+	explicit Buffer(Len_t length)
+		:m_pdata(std::make_unique<byte[]>(length)), m_length(length), m_piter(m_pdata.get())
 	{ }
-	Buffer(std::unique_ptr<byte[]>&& data, std::size_t length) noexcept
-		: m_pData(std::move(data)), m_pTail(m_pData.get() + length)
-	{ }
+    Buffer(byte *pdata, Len_t length) noexcept 
+        : m_pdata(pdata), m_length(length), m_piter(m_pdata.get())
+    { }
+	Buffer(UPtr_t&& data, Len_t length) noexcept
+		: m_pdata(std::move(data)), m_length(length), m_piter(m_pdata.get())
+    { }
 	Buffer(const Buffer& rhs)
-		:m_pData(std::make_unique<byte[]>(rhs.get_Length())), m_pTail(m_pData.get() + rhs.get_Length())
+		:m_pdata(std::make_unique<byte[]>(rhs.m_length)), m_length(rhs.m_length), m_piter(nullptr)
 	{
-		std::copy(rhs.m_pData.get(), rhs.m_pTail, m_pData.get());
+        auto pstart = rhs.m_pdata.get();
+        auto pend = pstart + rhs.m_length;
+		std::copy(pstart, pend, m_pdata.get());
+
+        m_piter = m_pdata.get() + (rhs.m_piter - rhs.m_pdata.get());
 	}
-	Buffer& operator=(const Buffer& rhs)
-	{
-		m_pData.reset(rhs.m_pData.get());
-		m_pTail = m_pData.get() + rhs.get_Length();
-		return *this;
-	}
-	Buffer(Buffer&& rhs) noexcept  
-		:m_pData(std::move(rhs.m_pData)), m_pTail(rhs.m_pTail)
+	Buffer(Buffer&& rhs) noexcept
+		:m_pdata(std::move(rhs.m_pdata)), m_length(rhs.m_length), m_piter(rhs.m_piter)
 	{ }
 	Buffer& operator=(Buffer&& rhs) noexcept
 	{
-		m_pData = std::move(rhs.m_pData);
-		m_pTail = rhs.m_pTail;
+		m_pdata = std::move(rhs.m_pdata);
+        m_length = rhs.m_length;
+        m_piter = rhs.m_piter;
 		return *this;
 	}
-	std::size_t get_Length() const noexcept { return m_pTail - m_pData.get(); }
-	byte *get_Tail() const noexcept { return m_pTail; }
-	byte *get_Data() const noexcept { return m_pData.get(); }
-	byte *get_Data(std::size_t pos) const noexcept { return &m_pData[pos]; }
+
+
+protected:
 	void IncreaseBy(std::size_t amount)
 	{
-		std::size_t prevLen = get_Length();
-		std::unique_ptr<byte[]> temp = std::make_unique<byte[]>(prevLen + amount);
-		std::copy(m_pData.get(), m_pTail, temp.get());
-		m_pData.swap(temp);
-		m_pTail = m_pData.get() + prevLen + amount;
+        auto pos = m_piter - m_pdata.get();
+
+		UPtr_t temp = std::make_unique<byte[]>(m_length + amount);
+
+        auto pstart = m_pdata.get();
+        auto pend = pstart + m_length;
+		std::copy(pstart, pend, temp.get());
+
+		m_pdata.swap(temp);
+        m_length += amount;
+        m_piter = m_pdata.get() + pos;
 	}
 private:
-	std::unique_ptr<byte[]> m_pData;
-	byte *m_pTail;
+	UPtr_t m_pdata;
+    Len_t m_length;
+    Iter_t m_piter;
 };

@@ -1,7 +1,8 @@
 #include "WebClient.h"
 #include <iterator>
 #include <algorithm>
-#include"Types.h"
+#include <string>
+#include "Util.h"
 
 template<class...TArgs>
 class Factory : public TArgs...
@@ -39,27 +40,27 @@ typedef Factory<CharBuilder, IntBuilder, BoolBuilder> MyFactory;
 
 enum
 {
-    INTMEMBER = 0, CHARMEMBER = 1, DOUBLEMEMBER = 2
+    INTMEMBER = 0, STRMEMBER = 1, DOUBLEMEMBER = 2
 };
-typedef StructGen<int, char, double> Datagram;
+typedef StructGen<int, std::string, double> Datagram;
 
 int main()
 {
-    Datagram temp(99, 'k', 23.45);
+    Datagram temp(99, "kkk", 23.45);
     Datagram temp2(temp);
 
     temp.Set<INTMEMBER>(1);
-    temp.Set<CHARMEMBER>('a');
+    temp.Set<STRMEMBER>("hhh");
 
 
-    std::cout << temp.Get<INTMEMBER>() << ' ' << temp.Get<CHARMEMBER>() << 
+    std::cout << temp.Get<INTMEMBER>() << ' ' << temp.Get<STRMEMBER>() << 
         ' ' << temp.Get<DOUBLEMEMBER>() << std::endl;
-    std::cout << temp.Get<int>() << ' ' << temp.Get<char>() <<
+    std::cout << temp.Get<int>() << ' ' << temp.Get<std::string>() <<
         ' ' << temp.Get<double>() << std::endl;
 
-    std::cout << temp2.Get<INTMEMBER>() << ' ' << temp2.Get<CHARMEMBER>() <<
+    std::cout << temp2.Get<INTMEMBER>() << ' ' << temp2.Get<STRMEMBER>() <<
         ' ' << temp2.Get<DOUBLEMEMBER>() << std::endl;
-    std::cout << temp2.Get<int>() << ' ' << temp2.Get<char>() <<
+    std::cout << temp2.Get<int>() << ' ' << temp2.Get<std::string>() <<
         ' ' << temp2.Get<double>() << std::endl;
 
 	//auto v1 = MyFactory::CreateInt();
