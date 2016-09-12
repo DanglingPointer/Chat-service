@@ -174,12 +174,12 @@ public:
         : Base_t(std::forward<TRestArgs>(args)...), m_var(std::forward<TFirstArg>(arg))
     { }
     StructGen()                     = default;
-    StructGen(const My_t&)          = default;
+    StructGen(const My_t&)          = delete;
     StructGen(My_t&&)               = default;
-    My_t& operator=(const My_t&)    = default;
+    My_t& operator=(const My_t&)    = delete;
     My_t& operator=(My_t&&)         = default;
 
-    // Get by index methods
+    // Get-by-index methods
     template<int INDEX,
         class = std::enable_if_t<!std::is_fundamental<
             typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
@@ -198,7 +198,7 @@ public:
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         return this->Parent_t::m_var;
     }
-    // Get by type methods
+    // Get-by-type methods
     template<class TMember,
         class = std::enable_if_t<!std::is_fundamental<TMember>::value>>
     const TMember& Get() const noexcept
@@ -229,8 +229,8 @@ public:
     }
 
 protected:
-    typedef TFirst                      Var_t;
-    TFirst m_var;
+    typedef TFirst       Var_t;
+    Var_t m_var;
 };
 
 template<>
