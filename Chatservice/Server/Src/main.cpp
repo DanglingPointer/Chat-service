@@ -46,7 +46,7 @@ int main()
         ' ' << temp2.Get<DOUBLEMEMBER>() << std::endl;
 
     auto *p = temp2.Get<STRMEMBER>();
-    delete p;
+    delete[] p;
 
 	system("pause");
 }
