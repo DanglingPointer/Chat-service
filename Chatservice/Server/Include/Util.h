@@ -1,6 +1,7 @@
 #pragma once
 #include <type_traits>
 #include <array>
+#include <string>
 
 typedef uint8_t         byte;
 typedef int8_t			sbyte;
@@ -146,21 +147,21 @@ template<>
 class StructGen<> 
 { };
 //--------------------------------------------------------------------------------------------------
-// Checks whether all TArgs are copy assignable and copy constructible
-template <class... TArgs>
-struct AllCopyable;
-
-template<class TFirst, class...TRest>
-struct AllCopyable<TFirst, TRest...>
-{
-    static constexpr bool value = (std::is_copy_assignable<TFirst>::value && std::is_copy_constructible<TFirst>::value)
-        ? AllCopyable<TRest...>::value : false;
-};
-template<>
-struct AllCopyable<>
-{
-    static constexpr bool value = true;
-};
+//// Checks whether all TArgs are copy assignable and copy constructible
+//template <class... TArgs>
+//struct AllCopyable;
+//
+//template<class TFirst, class...TRest>
+//struct AllCopyable<TFirst, TRest...>
+//{
+//    static constexpr bool value = (std::is_copy_assignable<TFirst>::value && std::is_copy_constructible<TFirst>::value)
+//        ? AllCopyable<TRest...>::value : false;
+//};
+//template<>
+//struct AllCopyable<>
+//{
+//    static constexpr bool value = true;
+//};
 //--------------------------------------------------------------------------------------------------
 
 template <class TStruct, std::size_t N = 0> class Serializer;

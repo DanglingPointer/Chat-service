@@ -48,5 +48,15 @@ int main()
     auto *p = temp2.Get<STRMEMBER>();
     delete[] p;
 
+    //std::string str = "hahaha";
+
+    //std::array<char, 6> arr;
+
+    //std::copy(str.cbegin(), str.cend(), arr.begin());
+
+    //std::string str2(arr.data(), arr.size());
+
+    //std::cout << str2;
+
 	system("pause");
 }
