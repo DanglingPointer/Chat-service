@@ -1,125 +1,35 @@
 #pragma once
-#include<type_traits>
+#include <type_traits>
+#include <array>
 
-typedef unsigned char	byte;
-typedef char			sbyte;
+typedef uint8_t         byte;
+typedef int8_t			sbyte;
 
-#if 0
 // Helper used for determining the total size of template args pack
-template<typename... Args> struct Size;
-template<> struct Size<>
+template<typename... TArgs> struct ArgsSize;
+template<> struct ArgsSize<>
 {
 	static constexpr std::size_t value = 0;
 };
-template<typename T, typename... Args> struct Size<T, Args...>
+template<typename T, typename... TArgs> struct ArgsSize<T, TArgs...>
 {
-	static constexpr std::size_t value = sizeof(T) + Size<Args...>::value;
+	static constexpr std::size_t value = sizeof(T) + ArgsSize<TArgs...>::value;
 };
-//----------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------
+// Obtains type at position N in TArgs
+template <std::size_t N, class... TArgs>
+struct TypeAt;
 
-template<class... TArgs> struct Typelist
-{ };
-//----------------------------------------------------------------------------------------------
-
-template<class TList, int INDEX> struct GetType;
-
-template<class TFirst, class... TArgs, int INDEX>
-struct GetType<Typelist<TFirst, TArgs...>, INDEX>
+template <std::size_t N, class T, class... TArgs>
+struct TypeAt<N, T, TArgs...>
 {
-    typedef typename GetType<Typelist<TArgs...>, INDEX - 1>::type type;
-};
-
-template<class TFirst, class... TArgs>
-struct GetType<Typelist<TFirst, TArgs...>, 0>
-{
-    typedef TFirst type;
-};
-//----------------------------------------------------------------------------------------------
-// Get sub-typelist starting from INDEX
-template<class TList, int INDEX> struct GetSublist;
-
-template<class TFirst, class... TArgs, int INDEX>
-struct GetSublist<Typelist<TFirst, TArgs...>, INDEX>
-{
-    typedef typename GetSublist<Typelist<TArgs...>, INDEX - 1>::type type;
-};
-template<class TFirst, class... TArgs>
-struct GetSublist<Typelist<TFirst, TArgs...>, 0>
-{
-    typedef Typelist<TFirst, TArgs...> type;
-};
-//----------------------------------------------------------------------------------------------
-
-template<class T, class TList> struct GetIndex;
-
-template<class T, class TFirst, class... TArgs>
-struct GetIndex<T, Typelist<TFirst, TArgs...>>
-{
-    static constexpr std::size_t INDEX = GetIndex<T, Typelist<TArgs...>>::INDEX + 1;
+    typedef typename TypeAt<N - 1, TArgs...>::Result_t Result_t;
 };
 template<class T, class... TArgs>
-struct GetIndex<T, Typelist<T, TArgs...>>
+struct TypeAt<0, T, TArgs...>
 {
-    static constexpr std::size_t INDEX = 0;
+    typedef T Result_t;
 };
-//----------------------------------------------------------------------------------------------
-
-template<class TList> class DataContainer;
-
-template<class TFirst, class... TArgs>
-class DataContainer<Typelist<TFirst, TArgs...>> : protected DataContainer<Typelist<TArgs...>>
-{
-    using List_t = Typelist<TFirst, TArgs...>;
-    using My_t = DataContainer<Typelist<TFirst, TArgs...>>;
-    using Base_t = DataContainer<Typelist<TArgs...>>;
-
-public:
-    DataContainer()                 = default;
-    DataContainer(const My_t&)      = default;
-    DataContainer(My_t&&)           = default;
-    My_t& operator=(const My_t&)    = default;
-    My_t& operator=(My_t&&)         = default;
-
-    template<class TFirstArg,
-        class... TRestArgs,
-        class = std::enable_if_t<
-        !std::is_base_of<My_t, std::decay_t<TFirstArg>>::value
-        >
-    >
-    DataContainer(TFirstArg&& mem, TRestArgs&&... mems) 
-        : Base_t(std::forward<TRestArgs>(mems)...), member(std::forward<TFirstArg>(mem))
-    { }
-    template<int INDEX> 
-    const auto& Get() const noexcept
-    {
-        using Sublist_t = typename GetSublist<List_t, INDEX>::type;
-        using Parent_t = DataContainer<Sublist_t>;
-        return this->Parent_t::member;
-    }
-    template<int INDEX, class T> 
-    void Set(T&& value)
-    {
-        using Sublist_t = typename GetSublist<List_t, INDEX>::type;
-        using Parent_t = DataContainer<Sublist_t>;
-        this->Parent_t::member = std::forward<T>(value);
-    }
-
-protected:
-    TFirst member;
-};
-template<>
-class DataContainer<Typelist<>>
-{ 
-    using My_t = DataContainer<Typelist<>>;
-public:
-    DataContainer()                 = default;
-    DataContainer(const My_t&)      = default;
-    DataContainer(My_t&&)           = default;
-    My_t& operator=(const My_t&)    = default;
-    My_t& operator=(My_t&&)         = default;
-};
-#endif
-//--------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------
 // Struct generator (generates class with one member of each type in TArgs and a setter and getter methods)
 template<class... TArgs>
@@ -127,16 +37,16 @@ class StructGen;
 
 //--------------------------------------------------------------------------------------------------
 // Get substruct by index of its first template argument
-template<class TStruct, int INDEX>
+template<class TStruct, std::size_t INDEX>
 struct IndSubstruct;
 
-template<class TFirst, class... TRest, int INDEX>
+template<class TFirst, class... TRest, std::size_t INDEX>
 struct IndSubstruct<StructGen<TFirst, TRest...>, INDEX>
 {
     typedef typename IndSubstruct<StructGen<TRest...>, INDEX - 1>::Result_t Result_t;
 };
 template<class TFirst, class... TRest>
-struct IndSubstruct<StructGen<TFirst, TRest...>, 0>
+struct IndSubstruct<StructGen<TFirst, TRest...>, 0U>
 {
     typedef StructGen<TFirst, TRest...> Result_t;
 };
@@ -174,13 +84,13 @@ public:
         : Base_t(std::forward<TRestArgs>(args)...), m_var(std::forward<TFirstArg>(arg))
     { }
     StructGen()                     = default;
-    StructGen(const My_t&)          = delete;
+    StructGen(const My_t&)          = default;
     StructGen(My_t&&)               = default;
-    My_t& operator=(const My_t&)    = delete;
+    My_t& operator=(const My_t&)    = default;
     My_t& operator=(My_t&&)         = default;
 
     // Get-by-index methods
-    template<int INDEX,
+    template<std::size_t INDEX,
         class = std::enable_if_t<!std::is_fundamental<
             typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
         >::value>>
@@ -189,7 +99,7 @@ public:
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         return this->Parent_t::m_var;
     }
-    template<int INDEX,
+    template<std::size_t INDEX,
         class = std::enable_if_t<std::is_fundamental<
             typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
         >::value>>
@@ -215,7 +125,7 @@ public:
     }
 
     // Set methods
-    template<int INDEX, class T>
+    template<std::size_t INDEX, class T>
     void Set(T&& value)
     {
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
@@ -232,6 +142,137 @@ protected:
     typedef TFirst       Var_t;
     Var_t m_var;
 };
-
 template<>
-class StructGen<> { };
+class StructGen<> 
+{ };
+//--------------------------------------------------------------------------------------------------
+// Checks whether all TArgs are copy assignable and copy constructible
+template <class... TArgs>
+struct AllCopyable;
+
+template<class TFirst, class...TRest>
+struct AllCopyable<TFirst, TRest...>
+{
+    static constexpr bool value = (std::is_copy_assignable<TFirst>::value && std::is_copy_constructible<TFirst>::value)
+        ? AllCopyable<TRest...>::value : false;
+};
+template<>
+struct AllCopyable<>
+{
+    static constexpr bool value = true;
+};
+//--------------------------------------------------------------------------------------------------
+
+template <class TStruct, std::size_t N = 0> class Serializer;
+
+// All TArgs must be trivially copy assignable and trivially copy constructible (= all arrays must be std::array)
+// N = extra size in bytes, accounts for dynamically allocated members
+template<class... TArgs, std::size_t N>
+class Serializer<StructGen<TArgs...>, N>
+{
+    typedef std::integral_constant<byte, 0> Zero_t;
+    typedef std::integral_constant<byte, 1> NZero_t;
+
+    static constexpr std::size_t NARGS = sizeof...(TArgs);
+    static constexpr std::size_t SIZE = ArgsSize<TArgs...>::value + N;
+
+public:
+    typedef Serializer<StructGen<TArgs...>>     My_t;
+    typedef StructGen<TArgs...>                 Data_t;
+
+    Serializer() noexcept
+        :m_buffer(), m_piter(m_buffer)
+    { }
+    void Serialize(const Data_t& data)
+    {
+        Reset();
+        InternalSerialize<NARGS - 1>(data, NZero_t());
+    }
+    Data_t Deserialize() const // dynamically allocates c-strings
+    {
+        Reset();
+        Data_t res;
+        InternalDeserialize<NARGS - 1>(&res, NZero_t());
+        return res;
+    }
+    void Reset() const noexcept
+    {
+        m_piter = (byte *)m_buffer;
+    }
+    byte *get_Buffer() noexcept
+    {
+        return (byte *)m_buffer;
+    }
+    const byte *get_Buffer() const noexcept
+    {
+        return (byte *)m_buffer;
+    }
+
+private:
+    // Serialization:
+    template <std::size_t IND> 
+    void InternalSerialize(const Data_t& data, NZero_t&&)
+    {
+        Insert(data.Get<IND>());
+
+        using Arg_t = std::conditional_t<(IND > 0), NZero_t, Zero_t>;
+        InternalSerialize<IND - 1>(data, Arg_t());
+    }
+    template <std::size_t IND> 
+    void InternalSerialize(const Data_t& data, Zero_t&&)
+    { }
+    template <class T> void Insert(const T& arg)
+    {
+        *reinterpret_cast<T *>(m_piter) = arg;
+        m_piter += sizeof(T);
+    }
+    void Insert(const char *str)
+    {
+        std::size_t length = std::strlen(str) + 1;
+        std::memcpy(m_piter, str, sizeof(char) * length);
+        m_piter += sizeof(char) * length;
+    }
+    void Insert(const std::string& str)
+    {
+        Insert(str.c_str());
+    }
+
+    // Deserialization:
+    template <std::size_t IND>
+    void InternalDeserialize(Data_t *pobj, NZero_t&&) const
+    {
+        using T = typename TypeAt<IND, TArgs...>::Result_t;
+        T temp;
+        Extract(temp);
+        pobj->Set<T>(std::move(temp));
+
+        using Arg_t = std::conditional_t<(IND > 0), NZero_t, Zero_t>;
+        InternalDeserialize<IND - 1>(pobj, Arg_t());
+    }
+    template <std::size_t IND>
+    void InternalDeserialize(Data_t *pobj, Zero_t&&) const
+    { }
+    template<class T> void Extract(T& membr) const
+    {
+        membr = *reinterpret_cast<T *>(m_piter);
+        m_piter += sizeof(T);
+    }
+    void Extract(const char *& str) const
+    {
+        const char *psrc = reinterpret_cast<const char *>(m_piter);
+        std::size_t length = std::strlen(psrc) + 1;
+        auto *ptemp = new char[length];
+        std::memcpy(ptemp, psrc, length * sizeof(char));
+        str = ptemp;
+        m_piter += length * sizeof(char);
+    }
+    void Extract(const std::string& str) const
+    {
+        const char *cstr;
+        Extract(cstr);
+        str = std::string(cstr, std::strlen(cstr) + 1);
+    }
+
+    byte            m_buffer[SIZE];
+    mutable byte    *m_piter;
+};

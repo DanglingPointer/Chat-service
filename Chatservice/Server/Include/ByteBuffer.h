@@ -18,7 +18,7 @@ public:
     typedef ByteBuffer<TObj, TAttrs...> My_t;
     enum : std::size_t
     {
-        SIZE = Size<TObj, TAttrs...>::value
+        SIZE = ArgsSize<TObj, TAttrs...>::value
     };
     ByteBuffer() noexcept 
         :m_ppos(m_data), m_ptail(m_data + SIZE - 1)
