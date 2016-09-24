@@ -1,10 +1,11 @@
 #pragma once
+#include <cstdint>
 #include <type_traits>
 #include <array>
 #include <string>
 
-typedef uint8_t         byte;
-typedef int8_t			sbyte;
+typedef std::uint8_t         byte;
+typedef std::int8_t          sbyte;
 
 // Helper used for determining the total size of template args pack
 template<typename... TArgs> struct ArgsSize;
