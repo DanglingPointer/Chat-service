@@ -14,7 +14,7 @@ template<std::size_t TCOUNT> class ThreadPool
 public:
     explicit ThreadPool(int linger) :m_linger(linger)
     {
-        for (std::atomic_bool& b : m_free)
+        for (std::atomic_bool& b : m_statusFree)
             b = true;
     }
     ~ThreadPool()
@@ -55,7 +55,7 @@ private:
     void TryAddWorker()
     {
         for (int i = 0; i < TCOUNT; ++i) {
-            if (m_free[i]) {
+            if (m_statusFree[i]) {
                 m_workers[i]->join();
                 m_workers[i] = std::make_unique<std::thread>(DoWork, i);
                 return;
@@ -64,26 +64,28 @@ private:
     }
     void DoWork(int workerId)
     {
-        m_free[workerId] = false;
+        m_statusFree[workerId] = false;
         std::function<void()> task;
         for (;;) {
             {
                 std::unique_lock<std::mutex> lk(m_queueLock);
-                this->m_cv.wait_for(lk, std::chrono::seconds(m_linger));
+                m_cv.wait_for(lk, std::chrono::seconds(m_linger));
                 if (m_tasks.empty()) {
-                    m_free[workerId] = true;
+                    m_statusFree[workerId] = true;
                     return;
                 }
 
                 task = std::move(m_tasks.front());
-                this->m_tasks.pop();
+                m_tasks.pop();
             }
             task();
         }
     }
     std::array<std::unique_ptr<std::thread>, TCOUNT> m_workers;
+    std::array<std::atomic_bool, TCOUNT> m_statusFree;
+
     std::queue<std::function<void()>> m_tasks;
-    std::array<std::atomic_bool, TCOUNT> m_free;
+
     std::mutex m_queueLock;
     std::condition_variable m_cv;
     std::atomic<int> m_linger;
