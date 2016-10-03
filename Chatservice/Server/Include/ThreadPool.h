@@ -27,26 +27,26 @@ public:
     template<class TFunc, class... TArgs>
     void AddTask(TFunc&& f, TArgs&&... args)
     {
+        TryAddWorker();
+
         auto btask = std::bind(std::forward<TFunc>(f), std::forward<TArgs>(args)...);
         {
             std::lock_guard<std::mutex> lk(m_queueLock);
             m_tasks.emplace([btask = std::move(btask)](){ btask(); });
-
-            TryAddWorker();
         }
         m_cv.notify_one();
     }
     template<class TFunc, class... TArgs>
     auto AddFunc(TFunc&& f, TArgs&&... args)
     {
+        TryAddWorker();
+
         using Res_t = std::result_of_t<TFunc(TArgs...)>;
         std::packaged_task<Res_t()> task(std::bind(std::forward<TFunc>(f), std::forward<TArgs>(args)...));
         auto fut = task.get_future();
         {
             std::lock_guard<std::mutex> lk(m_queueLock);
             m_tasks.emplace([task = std::move(task)](){ task(); });
-
-            TryAddWorker();
         }
         m_cv.notify_one();
         return fut;
@@ -70,14 +70,16 @@ private:
         for (;;) {
             {
                 std::unique_lock<std::mutex> lk(m_queueLock);
-                m_cv.wait_for(lk, std::chrono::seconds(m_linger));
-                if (m_tasks.empty()) {
+
+                if (m_cv.wait_for(lk, std::chrono::seconds(m_linger), [this] { return !(this->m_tasks.empty()); })) {
+                    task = std::move(m_tasks.front());
+                    m_tasks.pop();
+                }
+                else {
                     m_statusFree[workerId] = true;
                     return;
                 }
 
-                task = std::move(m_tasks.front());
-                m_tasks.pop();
             }
             task();
         }
