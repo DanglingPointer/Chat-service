@@ -20,7 +20,8 @@ public:
     ~ThreadPool()
     {
         for (auto& pthread : m_workers) {
-            pthread->join();
+            if (pthread)
+                pthread->join();
         }
     }
     template<class TFunc, class... TArgs>

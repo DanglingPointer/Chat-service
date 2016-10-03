@@ -146,6 +146,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Include\DadTP.h" />
     <ClInclude Include="Include\Event.h" />
     <ClInclude Include="Include\ByteBuffer.h" />
     <ClInclude Include="Include\Serialization.h" />

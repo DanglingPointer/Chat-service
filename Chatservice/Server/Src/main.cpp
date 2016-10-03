@@ -4,6 +4,7 @@
 #include <string>
 #include "Util.h"
 #include "ThreadPool.h"
+#include "DadTP.h"
 
 template <typename T, std::size_t N>
 std::ostream& operator << (std::ostream& out, const std::array<T, N>& arr)
@@ -49,6 +50,9 @@ void foo(int id)
 int main()
 {
     ThreadPool<6> tp(60);
+
+    CThreadPool p;
+    p.open(3, 3);
     //Datagram temp(99, "kkk", 23.45);
 
     //std::cout << temp.Get<INTMEMBER>() << ' ' << temp.Get<STRMEMBER>() <<
