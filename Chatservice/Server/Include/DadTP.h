@@ -92,14 +92,13 @@ public:
         if (nidle == 0 && curthreads < maxthreads)
             addthread();
 
-        using return_type = typename std::result_of<F(Args...)>::type;
+        auto task = std::bind(std::forward<F>(f), std::forward<Args>(args)...);
 
-        auto task = std::make_shared< std::packaged_task<return_type()> >(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
             if (stop)
                 return 1;
-            tasks.emplace([task]() { (*task)(); });
+            tasks.emplace([task = std::move(task)]() { task(); });
         }
         condition.notify_one();
 
@@ -107,7 +106,7 @@ public:
     }
 
     template<class F, class... Args>
-    auto queuewres(F&& f, Args&&... args) -> std::future<typename std::result_of<F(Args...)>::type>
+    auto queuewres(F&& f, Args&&... args)
     {
         delthread();
 
@@ -116,9 +115,9 @@ public:
 
         using return_type = typename std::result_of<F(Args...)>::type;
 
-        auto task = std::make_shared< std::packaged_task<return_type()> >(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+        std::packaged_task<return_type()> task(std::bind(std::forward<F>(f), std::forward<Args>(args)...));
+        auto res = task->get_future();
 
-        std::future<return_type> res = task->get_future();
         {
             std::unique_lock<std::mutex> lock(queue_mutex);
 
@@ -127,7 +126,7 @@ public:
                 return NULL;
             //throw std::runtime_error("enqueue on stopped ThreadPool");
 
-            tasks.emplace([task]() { (*task)(); });
+            m_tasks.emplace([task = std::move(task)](){ task(); });
         }
         condition.notify_one();
 

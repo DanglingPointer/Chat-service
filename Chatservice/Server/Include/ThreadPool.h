@@ -12,6 +12,7 @@
 template<std::size_t TCOUNT> class ThreadPool
 {
 public:
+    typedef ThreadPool<TCOUNT> My_t;
     explicit ThreadPool(int linger) :m_linger(linger)
     {
         for (std::atomic_bool& b : m_statusFree)
@@ -29,7 +30,9 @@ public:
     {
         TryAddWorker();
 
+        using Res_t = std::result_of_t<TFunc(TArgs...)>;
         auto btask = std::bind(std::forward<TFunc>(f), std::forward<TArgs>(args)...);
+
         {
             std::lock_guard<std::mutex> lk(m_queueLock);
             m_tasks.emplace([btask = std::move(btask)](){ btask(); });
@@ -42,11 +45,12 @@ public:
         TryAddWorker();
 
         using Res_t = std::result_of_t<TFunc(TArgs...)>;
-        std::packaged_task<Res_t()> task(std::bind(std::forward<TFunc>(f), std::forward<TArgs>(args)...));
-        auto fut = task.get_future();
+        auto task = std::make_shared<std::packaged_task<Res_t()>>(std::bind(std::forward<TFunc>(f), std::forward<TArgs>(args)...));
+        auto fut = task->get_future();
+
         {
             std::lock_guard<std::mutex> lk(m_queueLock);
-            m_tasks.emplace([task = std::move(task)](){ task(); });
+            m_tasks.emplace([task = std::move(task)](){ (*task)(); });
         }
         m_cv.notify_one();
         return fut;
@@ -57,8 +61,8 @@ private:
     {
         for (int i = 0; i < TCOUNT; ++i) {
             if (m_statusFree[i]) {
-                m_workers[i]->join();
-                m_workers[i] = std::make_unique<std::thread>(DoWork, i);
+                if (m_workers[i]) m_workers[i]->join();
+                m_workers[i] = std::make_unique<std::thread>(&My_t::DoWork, this, i);
                 return;
             }
         }
