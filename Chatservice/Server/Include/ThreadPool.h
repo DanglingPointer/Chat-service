@@ -20,6 +20,7 @@ public:
     }
     ~ThreadPool()
     {
+        m_cv.notify_all();
         for (auto& pthread : m_workers) {
             if (pthread)
                 pthread->join();
