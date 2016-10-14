@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <type_traits>
-#include <array>
+#include <cstring>
 #include <string>
 
 typedef std::uint8_t         byte;
@@ -91,7 +91,7 @@ public:
     My_t& operator=(const My_t&)    = default;
     My_t& operator=(My_t&&)         = default;
 
-    // Get-by-index methods
+    // Const get-by-ref
     template<std::size_t INDEX,
         class = std::enable_if_t<!std::is_fundamental<
             typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
@@ -101,6 +101,7 @@ public:
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         return this->Parent_t::m_var;
     }
+    // Const get-by-value
     template<std::size_t INDEX,
         class = std::enable_if_t<std::is_fundamental<
             typename IndSubstruct<My_t, INDEX>::Result_t::Var_t
@@ -110,34 +111,27 @@ public:
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         return this->Parent_t::m_var;
     }
-    // Get-by-type methods
-    template<class TMember,
-        class = std::enable_if_t<!std::is_fundamental<TMember>::value>>
-    const TMember& Get() const noexcept
+    //Non-const get-by-ref
+    template<std::size_t INDEX>
+    auto& Get() noexcept
     {
-        using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
-        return this->Parent_t::m_var;
-    }
-    template<class TMember,
-        class = std::enable_if_t<std::is_fundamental<TMember>::value>>
-    TMember Get() const noexcept
-    {
-        using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
+        using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         return this->Parent_t::m_var;
     }
 
-    // Set methods
-    template<std::size_t INDEX, class T>
+    // Set methods (not for static arrays except c-strings)
+    template<std::size_t INDEX, class T,
+        class = std::enable_if_t<!std::is_array<std::remove_reference_t<T>>::value>>
     void Set(T&& value)
     {
         using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
         this->Parent_t::m_var = std::forward<T>(value);
     }
-    template<class TMember, class T>
-    void Set(T&& value)
+    template<std::size_t INDEX>
+    void Set(char *str)
     {
-        using Parent_t = typename TypeSubstruct<My_t, TMember>::Result_t;
-        this->Parent_t::m_var = std::forward<T>(value);
+        using Parent_t = typename IndSubstruct<My_t, INDEX>::Result_t;
+        std::strcpy(this->Parent_t::m_var, str);
     }
 
 protected:
@@ -147,22 +141,6 @@ protected:
 template<>
 class StructGen<> 
 { };
-//--------------------------------------------------------------------------------------------------
-//// Checks whether all TArgs are copy assignable and copy constructible
-//template <class... TArgs>
-//struct AllCopyable;
-//
-//template<class TFirst, class...TRest>
-//struct AllCopyable<TFirst, TRest...>
-//{
-//    static constexpr bool value = (std::is_copy_assignable<TFirst>::value && std::is_copy_constructible<TFirst>::value)
-//        ? AllCopyable<TRest...>::value : false;
-//};
-//template<>
-//struct AllCopyable<>
-//{
-//    static constexpr bool value = true;
-//};
 //--------------------------------------------------------------------------------------------------
 
 template <class TStruct, std::size_t N = 0> class Serializer;
@@ -223,7 +201,9 @@ private:
     template <std::size_t IND> 
     void InternalSerialize(const Data_t& data, Zero_t&&)
     { }
-    template <class T> void Insert(const T& arg)
+    template <class T,
+        class = std::enable_if_t<!std::is_array<std::remove_reference_t<T>>::value>> 
+    void Insert(const T& arg)
     {
         *reinterpret_cast<T *>(m_piter) = arg;
         m_piter += sizeof(T);
@@ -231,7 +211,7 @@ private:
     void Insert(const char *str)
     {
         std::size_t length = std::strlen(str) + 1;
-        std::memcpy(m_piter, str, sizeof(char) * length);
+        std::strcpy((char *)m_piter, str);
         m_piter += sizeof(char) * length;
     }
     void Insert(const std::string& str)
@@ -243,10 +223,7 @@ private:
     template <std::size_t IND>
     void InternalDeserialize(Data_t *pobj, NZero_t&&) const
     {
-        using T = typename TypeAt<IND, TArgs...>::Result_t;
-        T temp;
-        Extract(temp);
-        pobj->Set<T>(std::move(temp));
+        Extract(pobj->Get<IND>());
 
         using Arg_t = std::conditional_t<(IND > 0), NZero_t, Zero_t>;
         InternalDeserialize<IND - 1>(pobj, Arg_t());
@@ -259,16 +236,22 @@ private:
         membr = *reinterpret_cast<T *>(m_piter);
         m_piter += sizeof(T);
     }
-    void Extract(const char *& str) const
+    void Extract(char *& str) const
     {
-        const char *psrc = reinterpret_cast<const char *>(m_piter);
+        char *psrc = reinterpret_cast<char *>(m_piter);
         std::size_t length = std::strlen(psrc) + 1;
-        auto *ptemp = new char[length];
-        std::memcpy(ptemp, psrc, length * sizeof(char));
-        str = ptemp;
+        str = new char[length];
+        std::strcpy(str, psrc);
         m_piter += length * sizeof(char);
     }
-    void Extract(const std::string& str) const
+    void Extract(char str[]) const
+    {
+        char *psrc = reinterpret_cast<char *>(m_piter);
+        std::size_t length = std::strlen(psrc) + 1;
+        std::strcpy(str, psrc);
+        m_piter += length * sizeof(char);
+    }
+    void Extract(std::string& str) const
     {
         const char *cstr;
         Extract(cstr);
@@ -278,3 +261,17 @@ private:
     byte            m_buffer[SIZE];
     mutable byte    *m_piter;
 };
+
+//--------------------------------------------------------------------------------------------------
+
+typedef StructGen<std::int16_t, char[32], char[470], std::int64_t> Response;
+
+typedef StructGen<std::int16_t, char[32], char[470]> Request;
+
+enum DataMemNames : std::size_t
+{
+    TYPE, ID, CONTENT, TIME
+};
+
+typedef Serializer<Response>    RespSer;
+typedef Serializer<Request>     ReqSer;

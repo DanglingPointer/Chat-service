@@ -5,55 +5,57 @@
 #include <winsock2.h>
 #include <WS2tcpip.h>
 #include "Event.h"
-#include "ByteBuffer.h"
 
 #pragma comment(lib, "Ws2_32.lib")
 
 // TData - type to be sent over TCP, must derive from ISerializable
-template<class TData> class WebClient
+template<class TRequest, class TResponse> 
+class Listener
 {
 public:
-    typedef typename TData::Buffer_t TBuffer;
-    typedef typename TData::MySerType TDgram;
-
-    WebClient() :m_buffer(), m_writeLock()
+    Listener() :m_listenSock(INVALID_SOCKET)
     {
         WSADATA wsaData;
 		WORD wVersionRequested = MAKEWORD(2, 2);
         if (WSAStartup(wVersionRequested, &wsaData)) {
             std::cerr << "WSAStartup error" << std::endl;
+            WSACleanup();
             exit(1);
         }
     }
-
-    void SendDgram(TDgram& dgram)
+    void Start(int portNum)
     {
-        std::lock_guard<std::mutex> lock(m_writeLock);
+        m_listenSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (m_listenSock) {
+            std::cerr << "Socket error: " << WSAGetLastError() << std::endl;
+            WSACleanup();
+            exit(1);
+        }
 
-        dgram.OnSerialize(&m_buffer);
+        sockaddr_in addr;
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons((USHORT)portNum);
+        addr.sin_addr.s_addr = htonl(INADDR_ANY);
+        if (bind(m_listenSock, (sockaddr *)&addr, sizeof(addr))) {
+            std::cerr << "Bind failed with error: " << WSAGetLastError() << std::endl;
+            closesocket(m_listenSock);
+            WSACleanup();
+            exit(1);
+        }
 
-        byte bufferCopy[TBuffer::SIZE];
+        if (listen(m_listenSock, SOMAXCONN_HINT(200))) {
+            std::cerr << "Socket listening fail: " << WSAGetLastError() << std::endl;
+            closesocket(m_listenSock);
+            WSACleanup();
+            exit(1);
+        }
 
-        m_buffer.CopyBufferTo(bufferCopy, m_buffer.SIZE);
-
-        // ... send bufferCopy to TCP stream ...
-    }
-
-    void RecvDgram(TDgram *poutmsg)
-    {
-        // ... retrieve a byte array from the tcp stream...
-        
-        int length = TBuffer::SIZE;
-        byte *pdata = new byte[length];
-
-        m_buffer.SetBuffer(pdata, length);
-
-        poutmsg->OnDeserialize(&m_buffer);
+        // accepting:
+        // https://msdn.microsoft.com/en-us/library/windows/desktop/ms737525(v=vs.85).aspx
+        // http://www.codeproject.com/Articles/412511/Simple-client-server-network-using-Cplusplus-and-W
     }
 
 private:
-    TBuffer m_buffer;
-    std::mutex m_writeLock;
-
+    SOCKET m_listenSock;
     // ... sockets etc ...
 };

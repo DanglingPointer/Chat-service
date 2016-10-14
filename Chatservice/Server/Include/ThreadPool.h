@@ -47,14 +47,13 @@ public:
 
         using Res_t = std::result_of_t<TFunc(TArgs...)>;
         auto task = std::make_shared<std::packaged_task<Res_t()>>(std::bind(std::forward<TFunc>(f), std::forward<TArgs>(args)...));
-        auto fut = task->get_future();
 
         {
             std::lock_guard<std::mutex> lk(m_queueLock);
-            m_tasks.emplace([task = std::move(task)](){ (*task)(); });
+            m_tasks.emplace([task](){ (*task)(); });
         }
         m_cv.notify_one();
-        return fut;
+        return task->get_future();
     }
 
 private:
@@ -76,7 +75,7 @@ private:
             {
                 std::unique_lock<std::mutex> lk(m_queueLock);
 
-                if (m_cv.wait_for(lk, std::chrono::seconds(m_linger), [this] { return !(this->m_tasks.empty()); })) {
+                if (m_cv.wait_for(lk, std::chrono::seconds(m_linger), [this] { return !m_tasks.empty(); }) ) {
                     task = std::move(m_tasks.front());
                     m_tasks.pop();
                 }

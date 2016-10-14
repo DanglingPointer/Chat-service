@@ -21,12 +21,6 @@
     <ClInclude Include="Include\WebClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ByteBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\Serialization.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\Util.h">
       <Filter>Header Files</Filter>
     </ClInclude>

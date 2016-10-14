@@ -148,8 +148,6 @@
   <ItemGroup>
     <ClInclude Include="Include\DadTP.h" />
     <ClInclude Include="Include\Event.h" />
-    <ClInclude Include="Include\ByteBuffer.h" />
-    <ClInclude Include="Include\Serialization.h" />
     <ClInclude Include="Include\ThreadPool.h" />
     <ClInclude Include="Include\Util.h" />
     <ClInclude Include="Include\WebClient.h" />
