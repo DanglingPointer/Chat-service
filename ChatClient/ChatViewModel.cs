@@ -76,12 +76,17 @@ namespace ChatClient
 
         void onRegisterPressedHandler()
         {
-            if (Textpad == null) return;
-            m_registered = m_service.Register(Textpad);
-            Textpad = "";
-            propertyChanged(nameof(Textpad));
-            OnRegisterPressed.ExecuteChanged(null, null);
-            OnSendPressed.ExecuteChanged(null, null);
+            try {
+                if (Textpad == null) return;
+                m_registered = m_service.Register(Textpad);
+                Textpad = "";
+                propertyChanged(nameof(Textpad));
+                OnRegisterPressed.ExecuteChanged(null, null);
+                OnSendPressed.ExecuteChanged(null, null);
+            }
+            catch (EndpointNotFoundException) {
+                System.Environment.Exit(0);
+            }
         }
         void onSendPressedHandler()
         {

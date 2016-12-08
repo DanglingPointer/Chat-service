@@ -22,11 +22,11 @@
     <MetadataSource Address="http://localhost:8734/ChatService" Protocol="http" SourceId="1" />
   </MetadataSources>
   <Metadata>
-    <MetadataFile FileName="ChatService3.xsd" MetadataType="Schema" ID="641c8f2f-7db3-417c-9e6b-c7406e4065cf" SourceId="1" SourceUrl="http://192.168.1.4:8734/ChatService?xsd=xsd0" />
-    <MetadataFile FileName="ChatService31.xsd" MetadataType="Schema" ID="909f18c7-5657-402c-bfcc-7fd7f61a2f5e" SourceId="1" SourceUrl="http://192.168.1.4:8734/ChatService?xsd=xsd1" />
-    <MetadataFile FileName="ChatService1.disco" MetadataType="Disco" ID="ae58748d-aec6-4ac5-b51a-a5b654cc05e9" SourceId="1" SourceUrl="http://192.168.1.4:8734/ChatService?disco" />
-    <MetadataFile FileName="SimpleChatServer1.wsdl" MetadataType="Wsdl" ID="20a1bd32-6c98-473b-b83b-8023d4dd185e" SourceId="1" SourceUrl="http://192.168.1.4:8734/ChatService?wsdl" />
-    <MetadataFile FileName="ChatService32.xsd" MetadataType="Schema" ID="76fcdb8d-1f88-4ea8-a23b-922ea3e30310" SourceId="1" SourceUrl="http://192.168.1.4:8734/ChatService?xsd=xsd2" />
+    <MetadataFile FileName="ChatService.disco" MetadataType="Disco" ID="9506bcb6-091b-43ef-90a5-e13d25139a22" SourceId="1" SourceUrl="http://localhost:8734/ChatService?disco" />
+    <MetadataFile FileName="ChatService.xsd" MetadataType="Schema" ID="3dd65221-cf16-4293-9b69-39710858679e" SourceId="1" SourceUrl="http://localhost:8734/ChatService?xsd=xsd2" />
+    <MetadataFile FileName="SimpleChatServer.wsdl" MetadataType="Wsdl" ID="8a481460-f6d8-4458-96fe-67d9c7ff9aa3" SourceId="1" SourceUrl="http://localhost:8734/ChatService?wsdl" />
+    <MetadataFile FileName="ChatService1.xsd" MetadataType="Schema" ID="24725874-6adb-4d5d-94c9-fe89940afe3e" SourceId="1" SourceUrl="http://localhost:8734/ChatService?xsd=xsd1" />
+    <MetadataFile FileName="ChatService2.xsd" MetadataType="Schema" ID="fbbf4471-7898-4986-a2a1-e615d7623374" SourceId="1" SourceUrl="http://localhost:8734/ChatService?xsd=xsd0" />
   </Metadata>
   <Extensions>
     <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
